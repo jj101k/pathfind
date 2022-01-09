@@ -2,6 +2,16 @@
 <html>
     <head>
         <title>Pathfinding test</title>
+        <style type="text/css">
+            #grid {
+                border: 1px solid black;
+                width: 400px;
+                height: 400px;
+                margin-left: auto;
+                margin-right: auto;
+                display: inline-block;
+            }
+        </style>
     </head>
     <body>
         <table style="width: 300px; float: right">
@@ -17,7 +27,7 @@
 
             </tbody>
         </table>
-        <canvas id="grid" style="border: 1px solid black; width: 400px; height: 400px"></canvas>
+        <canvas id="grid"></canvas>
         <p><input type="file" id="wasm-import"/></p>
         <p><label>Random size <input id="test-size" type="number" value="70"/></label></p>
         <p><label><input type="checkbox" onchange="t.randomCornerToCorner = this.checked" checked>Random is corner-to-corner</label></p>
