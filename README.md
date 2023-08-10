@@ -121,3 +121,42 @@ fixed size regardless of whether it might be avantageous in context to use less.
 Linked lists are viable and may be used if there's some use in reordering a
 list, but in general it makes more sense to have a flat array; in fact, for
 static storage this wouldn't even need a head pointer.
+
+# Encoding
+
+1111: Obstruction
+0000: empty
+
+For everything else, n-1 maps to:
+
+| Owner | Diagonal | +x(+) | +y(x)
+
+Note that there are 8 directions which are non-backwards, but it should be
+apparent that you can only store 14 values. 14!
+
+Well, we can say that it won't go backwards, which is convenient.
+
+For the last two values (110 and 111) the owner is not known, so you only get:
+
+0000 s1-y
+0001 s1-x
+0010 s1-y
+0011 s1-x
+0100 s1-x-y
+0101 s1-x+y
+
+0110 ??+x-y
+0111 ??+x+y
+
+1000 s2-y
+1001 s2-x
+1010 s2-y
+1011 s2-x
+1100 s2-x-y
+1101 s2-x+y
+
+Side determination, of course, is routinely helpful to see whether it's worth
+trying to backtrack a discovered path.
+
+For the actual backtracking, other mitigations are possible, but frankly all
+have pathological edge cases.
