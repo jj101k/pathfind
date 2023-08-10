@@ -338,17 +338,16 @@ class GridTest {
         if (interval_ms) {
             let t = new Date().valueOf()
             let steps = 0
-            let calibrated_steps = 0
+            let calibrated_steps = 10
             let inner_ms = 0
             while (running) {
                 running = this.step()
                 steps++
-                if (steps < calibrated_steps)
-                    continue
-                const tp = new Date().valueOf()
-                if (tp - t >= interval_ms) {
-                    calibrated_steps = steps * 0.75
-                    inner_ms += tp - t
+                if (steps >= calibrated_steps) {
+                    const tp = new Date().valueOf()
+                    const delta_ms = tp - t
+                    calibrated_steps = steps * interval_ms / delta_ms
+                    inner_ms += delta_ms
                     await new Promise(
                         resolve => setTimeout(
                             resolve,
