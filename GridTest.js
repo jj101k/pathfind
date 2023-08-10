@@ -335,6 +335,9 @@ class GridTest {
     async run(interval_ms = 10) {
         this.innerRuntime = null
         let running = true
+        let total_steps = 0
+        const start = new Date()
+        let pauses = 0
         if (interval_ms) {
             let t = new Date().valueOf()
             let steps = 0
@@ -348,24 +351,43 @@ class GridTest {
                     const delta_ms = tp - t
                     calibrated_steps = steps * interval_ms / delta_ms
                     inner_ms += delta_ms
+                    total_steps += steps
                     await new Promise(
                         resolve => setTimeout(
                             resolve,
                             0
                         )
                     )
+                    pauses++
                     steps = 0
                     t = new Date().valueOf()
                 }
             }
             this.innerRuntime = inner_ms + new Date().valueOf() - t
+            total_steps += steps
         } else {
             const t = new Date().valueOf()
             while (running) {
+                total_steps++
                 running = this.step()
             }
             this.innerRuntime = new Date().valueOf() - t
         }
+        this.totalSteps = total_steps
+        const finish = new Date()
+        const outerRuntime = finish.valueOf() - start.valueOf()
+        console.log(
+            `Completed ${this.totalSteps} steps in ` +
+            `${this.innerRuntime}ms (inner), ` +
+            `${outerRuntime}ms (outer) ` +
+            `(${Math.round(this.totalSteps * 1000 / (outerRuntime + 1))} steps/s)`
+        )
+        console.log(
+            `${Math.round(pauses * 1000 / (outerRuntime + 1))} pauses/s`
+        )
+        console.log(
+            `${Math.round(this.totalSteps / (pauses + 1))} steps/pause`
+        )
         this.displayResults()
     }
     async runAll() {
