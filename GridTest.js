@@ -3,6 +3,11 @@
  *
  */
 class GridTest {
+    /**
+     * @type {number | undefined}
+     */
+    totalSteps
+
     constructor() {
         this.blind = false
         /** @type {?GridMap} */
