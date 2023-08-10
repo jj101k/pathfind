@@ -332,7 +332,7 @@ class GridTest {
      *
      * @param {number} interval_ms
      */
-    async run(interval_ms = 10) {
+    async run(interval_ms = 1000 / 60) {
         this.innerRuntime = null
         let running = true
         let total_steps = 0
