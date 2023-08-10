@@ -56,6 +56,8 @@ function load_webassembly(m_exports) {
             nodeWidth: node_width,
         }
     }
+
+    console.log("Web assembly loaded, ready to use")
 }
 const webassembly_import = {
     console: {
