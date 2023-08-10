@@ -352,6 +352,8 @@ class GridTest {
                     calibrated_steps = steps * interval_ms / delta_ms
                     inner_ms += delta_ms
                     total_steps += steps
+                    steps = 0
+                    t = new Date().valueOf()
                     await new Promise(
                         resolve => setTimeout(
                             resolve,
@@ -359,8 +361,6 @@ class GridTest {
                         )
                     )
                     pauses++
-                    steps = 0
-                    t = new Date().valueOf()
                 }
             }
             this.innerRuntime = inner_ms + new Date().valueOf() - t
