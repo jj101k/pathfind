@@ -349,7 +349,7 @@ class GridTest {
                 if (steps >= calibrated_steps) {
                     const tp = new Date().valueOf()
                     const delta_ms = tp - t
-                    calibrated_steps = steps * interval_ms / delta_ms
+                    calibrated_steps = Math.floor(steps * interval_ms / delta_ms)
                     inner_ms += delta_ms
                     total_steps += steps
                     steps = 0
