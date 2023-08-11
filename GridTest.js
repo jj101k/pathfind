@@ -319,10 +319,10 @@ class GridTest {
     }
     /**
      *
-     * @param {number} [s]
+     * @param {number} [node_width]
      */
-    async randomTest(s = 10) {
-        await this.initForRandom(s)
+    async randomTest(node_width = 10) {
+        await this.initForRandom(node_width)
         this.testNumber = null
         if (!this.paused) {
             if (this.blind) {
