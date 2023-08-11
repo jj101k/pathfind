@@ -4,6 +4,11 @@
  */
 class GridTest {
     /**
+     *
+     */
+    density = 0.5
+
+    /**
      * @type {number | undefined}
      */
     totalSteps
@@ -178,7 +183,7 @@ class GridTest {
         let t = new Date().valueOf()
         for (let y = 0; y < node_width; y++) {
             for (let x = 0; x < node_width; x++) {
-                if (Math.random() > 0.5) {
+                if (Math.random() < this.density) {
                     const o = { x: x, y: y }
                     obstructions.push(o)
                     grid_map.source.addNode(OBSTRUCTION_NODE, o, true)
