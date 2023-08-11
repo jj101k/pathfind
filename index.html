@@ -28,27 +28,31 @@
             </tbody>
         </table>
         <canvas id="grid"></canvas>
-        <p>Import .wasm core <input type="file" id="wasm-import"/></p>
-        <p><label>
-            Random size
-            <input id="test-size" type="number"
-        value="300"/>
-            x
-            <span id="test-size-out">300</span>
-        </label></p>
-        <p><label>Obstruction density <input id="density" type="number" min="0"
-        max="0.5" step="0.1" value="0.5"/></label></p>
-        <p><label><input type="checkbox" onchange="t.randomCornerToCorner = this.checked" checked>Random is corner-to-corner</label></p>
-        <p><label>Test <input id="test-number" type="number" value=""/></label></p>
-        <p><label><input type="checkbox" onchange="t.paused = this.checked">Pause</label></p>
-        <p><label><input type="checkbox" onchange="t.blind = this.checked">Disable display updates</label></p>
-        <p>
-            <button type="button" onclick="t.step()">Step</button>
-            <button type="button" onclick="t.nextTest()">Next test</button>
-            <button type="button" onclick="t.randomTest(size)">Random test</button>
-            <button type="button" onclick="t.nullTest(size)">Null test</button>
-            <button type="button" onclick="t.runAll()">All tests</button>
-        </p>
+        <section id="config-form">
+            <p>Import .wasm core <input type="file" id="wasm-import"/></p>
+            <p><label>
+                Random size
+                <input type="number" data-readwrite="size"/>
+                x
+                <span data-read="size">?</span>
+            </label></p>
+            <p><label>
+                Obstruction density
+                <input type="number" min="0"
+            max="0.5" step="0.1" value="0.5" data-readwrite="density"/>
+            </label></p>
+            <p><label><input type="checkbox" data-readwrite="randomCornerToCorner">Random is corner-to-corner</label></p>
+            <p><label>Test <input type="number" data-readwrite="testNumber"/></label></p>
+            <p><label><input type="checkbox" data-readwrite="paused">Pause</label></p>
+            <p><label><input type="checkbox" data-readwrite="blind">Disable display updates</label></p>
+            <p>
+                <button type="button" data-call="step">Step</button>
+                <button type="button" data-call="nextTest">Next test</button>
+                <button type="button" data-call="randomTest">Random test</button>
+                <button type="button" data-call="nullTest">Null test</button>
+                <button type="button" data-call="runAll">All tests</button>
+            </p>
+        </section>
         <script src="index.js"></script>
         <script src="GridMap.js"></script>
         <script src="PositionedNode.js"></script>
@@ -61,20 +65,110 @@
         <script src="self-test.js"></script>
         <script>
             let t = new GridTest()
-            let size = document.querySelector("#test-size").value
+
+            /**
+             * @type {HTMLElement}
+             */
+            const form = document.querySelector("#config-form")
+
+            const retainedData = {
+                _testNumber: null,
+                size: 300,
+                nextTest: () => t.nextTest(),
+                nullTest() {
+                    return t.nullTest(this.size)
+                },
+                randomTest() {
+                    return t.randomTest(this.size)
+                },
+                runAll: () => t.runAll(),
+                step: () => t.step(),
+                get blind() {
+                    return t.blind
+                },
+                set blind(v) {
+                    t.blind = v
+                },
+                get density() {
+                    return t.density
+                },
+                set density(v) {
+                    t.density = v
+                },
+                get paused() {
+                    return t.paused
+                },
+                set paused(v) {
+                    t.paused = v
+                },
+                get randomCornerToCorner() {
+                    return t.randomCornerToCorner
+                },
+                set randomCornerToCorner(v) {
+                    t.randomCornerToCorner = v
+                },
+                get testNumber() {
+                    return this._testNumber
+                },
+                set testNumber(v) {
+                    this._testNumber = v
+                    t.selectTest(v)
+                }
+            }
+            const listeners = {
+                size: [],
+            }
+            for(const e of form.querySelectorAll("[data-readwrite]")) {
+                /**
+                 * @type {HTMLInputElement}
+                 */
+                const he = e
+                const key = he.dataset.readwrite
+                listeners[key] = listeners[key] || []
+                if(he.type == "checkbox") {
+                    he.onchange = function() {
+                        retainedData[key] = this.checked
+                        for(const l of listeners[key]) {
+                            l()
+                        }
+                    }
+                    he.checked = retainedData[key]
+                } else {
+                    he.onchange = function() {
+                        retainedData[key] = this.value
+                        for(const l of listeners[key]) {
+                            l()
+                        }
+                    }
+                    he.value = retainedData[key]
+                }
+            }
+            for(const e of form.querySelectorAll("[data-read]")) {
+                /**
+                 * @type {HTMLElement}
+                 */
+                const he = e
+                const key = he.dataset.read
+                listeners[key] = listeners[key] || []
+                listeners[key].push(
+                    () => he.textContent = retainedData[key]
+                )
+                he.textContent = retainedData[key]
+            }
+
+            for(const e of form.querySelectorAll("[data-call]")) {
+                /**
+                 * @type {HTMLButtonElement}
+                 */
+                const he = e
+                const key = he.dataset.call
+                he.onclick = function() {
+                    retainedData[key]()
+                }
+            }
+
             t.tests = PathTests
-            t.randomTest(size)
-            t.density = document.querySelector("#density").value
-            document.querySelector("#density").onchange = function() {
-                t.density = this.value
-            }
-            document.querySelector("#test-number").onchange = function() {
-                t.selectTest(this.value)
-            }
-            document.querySelector("#test-size").onchange = function() {
-                size = +this.value
-                document.querySelector("#test-size-out").textContent = +this.value
-            }
+            t.randomTest(retainedData.size)
         </script>
     </body>
 </html>
