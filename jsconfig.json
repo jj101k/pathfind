@@ -2,7 +2,7 @@
     "compilerOptions": {
         "checkJs": true,
         "strictNullChecks": true,
-        "lib": ["DOM"],
+        "lib": ["DOM", "DOM.Iterable", "ES2022"],
         "target": "esnext"
     }
 }

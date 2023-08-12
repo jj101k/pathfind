@@ -1,16 +1,19 @@
+/**
+ *
+ */
 class Frameworker {
     /**
-     * @type {Record<string, (() => any)[]}
+     * @type {{[k: string]: (() => any)[]}}
      */
     #listeners = {}
 
     /**
-     * @type {Record<string, any>}
+     * @type {{[k: string]: any}}
      */
     #retainedData
 
     /**
-     * @type {Record<string, any>}
+     * @type {{[k: string]: any}}
      */
     constructor(retainedData) {
         this.#retainedData = retainedData
@@ -25,19 +28,22 @@ class Frameworker {
              * @type {HTMLInputElement}
              */
             const he = e
+            /**
+             * @type {string}
+             */
             const key = he.dataset.readwrite
             this.#listeners[key] = this.#listeners[key] || []
             if(he.type == "checkbox") {
-                he.onchange = function() {
-                    this.#retainedData[key] = this.checked
+                he.onchange = () => {
+                    this.#retainedData[key] = he.checked
                     for(const l of this.#listeners[key]) {
                         l()
                     }
                 }
                 he.checked = this.#retainedData[key]
             } else {
-                he.onchange = function() {
-                    this.#retainedData[key] = this.value
+                he.onchange = () => {
+                    this.#retainedData[key] = he.value
                     for(const l of this.#listeners[key]) {
                         l()
                     }
@@ -50,6 +56,9 @@ class Frameworker {
              * @type {HTMLElement}
              */
             const he = e
+            /**
+             * @type {string}
+             */
             const key = he.dataset.read
             this.#listeners[key] = this.#listeners[key] || []
             this.#listeners[key].push(
@@ -63,8 +72,11 @@ class Frameworker {
              * @type {HTMLButtonElement}
              */
             const he = e
+            /**
+             * @type {string}
+             */
             const key = he.dataset.call
-            he.onclick = function() {
+            he.onclick = () => {
                 this.#retainedData[key]()
             }
         }
