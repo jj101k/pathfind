@@ -7,6 +7,30 @@
  */
 class Frameworker {
     /**
+     * @param {Object} o
+     * @param {Object} f
+     * @param {(keyof f)[]} ks
+     * @param {{[k: keyof f]: string}} mapped
+     */
+    static proxy(o, f, ks, mapped = {}) {
+        for(const k of ks) {
+            Object.defineProperty(o, k, {
+                get: () => f[k],
+                set(v) {
+                    f[k] = v
+                },
+            })
+        }
+        for(const [k, ok] of Object.entries(mapped)) {
+            Object.defineProperty(o, ok, {
+                get: () => f[k],
+                set(v) {
+                    f[k] = v
+                },
+            })
+        }
+    }
+    /**
      * @type {{[event_name: string]: (() => any)[]}}
      */
     #eventListeners = {}

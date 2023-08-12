@@ -73,49 +73,22 @@
             const form = document.querySelector("#config-form")
 
             const retainedData = {
-                _testNumber: null,
                 size: 300,
-                nextTest: () => t.nextTest(),
                 nullTest() {
                     return t.nullTest(this.size)
                 },
                 randomTest() {
                     return t.randomTest(this.size)
                 },
-                runAll: () => t.runAll(),
-                step: () => t.step(),
-                get blind() {
-                    return t.blind
-                },
-                set blind(v) {
-                    t.blind = v
-                },
-                get density() {
-                    return t.density
-                },
-                set density(v) {
-                    t.density = v
-                },
-                get paused() {
-                    return t.paused
-                },
-                set paused(v) {
-                    t.paused = v
-                },
-                get randomCornerToCorner() {
-                    return t.randomCornerToCorner
-                },
-                set randomCornerToCorner(v) {
-                    t.randomCornerToCorner = v
-                },
-                get testNumber() {
-                    return this._testNumber
-                },
                 set testNumber(v) {
                     this._testNumber = v
                     t.selectTest(v)
                 }
             }
+
+            Frameworker.proxy(retainedData, t, [
+                "blind", "density", "paused", "randomCornerToCorner", "step",
+                "runAll", "nextTest"], {testNumber: "_testNumber"})
 
             const f = new Frameworker(retainedData)
             f.addEventListener("init", () => {
