@@ -115,57 +115,81 @@
                     t.selectTest(v)
                 }
             }
-            const listeners = {
-                size: [],
-            }
-            for(const e of form.querySelectorAll("[data-readwrite]")) {
+            class Frameworker {
                 /**
-                 * @type {HTMLInputElement}
+                 * @type {Record<string, (() => any)[]}
                  */
-                const he = e
-                const key = he.dataset.readwrite
-                listeners[key] = listeners[key] || []
-                if(he.type == "checkbox") {
-                    he.onchange = function() {
-                        retainedData[key] = this.checked
-                        for(const l of listeners[key]) {
-                            l()
-                        }
-                    }
-                    he.checked = retainedData[key]
-                } else {
-                    he.onchange = function() {
-                        retainedData[key] = this.value
-                        for(const l of listeners[key]) {
-                            l()
-                        }
-                    }
-                    he.value = retainedData[key]
+                #listeners = {}
+
+                /**
+                 * @type {Record<string, any>}
+                 */
+                #retainedData
+
+                /**
+                 * @type {Record<string, any>}
+                 */
+                constructor(retainedData) {
+                    this.#retainedData = retainedData
                 }
-            }
-            for(const e of form.querySelectorAll("[data-read]")) {
+
                 /**
-                 * @type {HTMLElement}
+                 * @param {HTMLElement} form
                  */
-                const he = e
-                const key = he.dataset.read
-                listeners[key] = listeners[key] || []
-                listeners[key].push(
-                    () => he.textContent = retainedData[key]
-                )
-                he.textContent = retainedData[key]
+                init(form) {
+                    for(const e of form.querySelectorAll("[data-readwrite]")) {
+                        /**
+                         * @type {HTMLInputElement}
+                         */
+                        const he = e
+                        const key = he.dataset.readwrite
+                        this.#listeners[key] = this.#listeners[key] || []
+                        if(he.type == "checkbox") {
+                            he.onchange = function() {
+                                this.#retainedData[key] = this.checked
+                                for(const l of this.#listeners[key]) {
+                                    l()
+                                }
+                            }
+                            he.checked = this.#retainedData[key]
+                        } else {
+                            he.onchange = function() {
+                                this.#retainedData[key] = this.value
+                                for(const l of this.#listeners[key]) {
+                                    l()
+                                }
+                            }
+                            he.value = this.#retainedData[key]
+                        }
+                    }
+                    for(const e of form.querySelectorAll("[data-read]")) {
+                        /**
+                         * @type {HTMLElement}
+                         */
+                        const he = e
+                        const key = he.dataset.read
+                        this.#listeners[key] = this.#listeners[key] || []
+                        this.#listeners[key].push(
+                            () => he.textContent = this.#retainedData[key]
+                        )
+                        he.textContent = this.#retainedData[key]
+                    }
+
+                    for(const e of form.querySelectorAll("[data-call]")) {
+                        /**
+                         * @type {HTMLButtonElement}
+                         */
+                        const he = e
+                        const key = he.dataset.call
+                        he.onclick = function() {
+                            this.#retainedData[key]()
+                        }
+                    }
+                }
             }
 
-            for(const e of form.querySelectorAll("[data-call]")) {
-                /**
-                 * @type {HTMLButtonElement}
-                 */
-                const he = e
-                const key = he.dataset.call
-                he.onclick = function() {
-                    retainedData[key]()
-                }
-            }
+            const f = new Frameworker(retainedData)
+            f.init(form)
 
             t.tests = PathTests
             t.randomTest(retainedData.size)
