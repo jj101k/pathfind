@@ -118,10 +118,11 @@
             }
 
             const f = new Frameworker(retainedData)
+            f.addEventListener("init", () => {
+                t.tests = PathTests
+                t.randomTest(retainedData.size)
+            })
             f.init(form)
-
-            t.tests = PathTests
-            t.randomTest(retainedData.size)
         </script>
     </body>
 </html>

@@ -1,7 +1,16 @@
 /**
+ * @typedef {"beforeinit" | "init"} FrameworkerEventName
+ */
+
+/**
  *
  */
 class Frameworker {
+    /**
+     * @type {{[event_name: string]: (() => any)[]}}
+     */
+    #eventListeners = {}
+
     /**
      * @type {{[k: string]: (() => any)[]}}
      */
@@ -31,9 +40,32 @@ class Frameworker {
     }
 
     /**
+     *
+     * @param {FrameworkerEventName} event_name
+     * @param {() => any} handler
+     */
+    addEventListener(event_name, handler) {
+        this.#eventListeners[event_name] = this.#eventListeners[event_name] || []
+        this.#eventListeners[event_name].push(handler)
+    }
+
+    /**
+     *
+     * @param {Event} event
+     */
+    dispatchEvent(event) {
+        if(this.#eventListeners[event.type]) {
+            for(const l of this.#eventListeners[event.type]) {
+                l.call(this.#retainedData)
+            }
+        }
+    }
+
+    /**
      * @param {HTMLElement} form
      */
     init(form) {
+        this.dispatchEvent(new Event("beforeinit"))
         for(const e of form.querySelectorAll("[data-readwrite]")) {
             /**
              * @type {HTMLInputElement}
@@ -89,6 +121,20 @@ class Frameworker {
             he.addEventListener("click", () => {
                 this.#retainedData[key]()
             })
+        }
+        this.dispatchEvent(new Event("init"))
+    }
+
+    /**
+     *
+     * @param {FrameworkerEventName} event_name
+     * @param {() => any} handler
+     */
+    removeEventListener(event_name, handler) {
+        if(this.#eventListeners[event_name]) {
+            this.#eventListeners[event_name] = this.#eventListeners[event_name].filter(
+                v => v != handler
+            )
         }
     }
 }
