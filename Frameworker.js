@@ -13,6 +13,17 @@ class Frameworker {
     #retainedData
 
     /**
+     *
+     * @param {string} key
+     */
+    #assertKey(key) {
+        if(!(key in this.#retainedData)) {
+            console.warn(`Key ${key} isn't recognised`)
+        }
+        this.#listeners[key] = this.#listeners[key] || []
+    }
+
+    /**
      * @type {{[k: string]: any}}
      */
     constructor(retainedData) {
@@ -32,24 +43,23 @@ class Frameworker {
              * @type {string}
              */
             const key = he.dataset.readwrite
-            this.#listeners[key] = this.#listeners[key] || []
+            this.#assertKey(key)
             if(he.type == "checkbox") {
-                he.onchange = () => {
+                he.addEventListener("change", () => {
                     this.#retainedData[key] = he.checked
-                    for(const l of this.#listeners[key]) {
-                        l()
-                    }
-                }
+                })
                 he.checked = this.#retainedData[key]
             } else {
-                he.onchange = () => {
+                he.addEventListener("change", () => {
                     this.#retainedData[key] = he.value
-                    for(const l of this.#listeners[key]) {
-                        l()
-                    }
-                }
+                })
                 he.value = this.#retainedData[key]
             }
+            he.addEventListener("change", () => {
+                for(const l of this.#listeners[key]) {
+                    l()
+                }
+            })
         }
         for(const e of form.querySelectorAll("[data-read]")) {
             /**
@@ -60,7 +70,7 @@ class Frameworker {
              * @type {string}
              */
             const key = he.dataset.read
-            this.#listeners[key] = this.#listeners[key] || []
+            this.#assertKey(key)
             this.#listeners[key].push(
                 () => he.textContent = this.#retainedData[key]
             )
@@ -76,9 +86,9 @@ class Frameworker {
              * @type {string}
              */
             const key = he.dataset.call
-            he.onclick = () => {
+            he.addEventListener("click", () => {
                 this.#retainedData[key]()
-            }
+            })
         }
     }
 }
