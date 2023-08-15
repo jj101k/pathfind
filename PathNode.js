@@ -116,7 +116,7 @@ class PathNode extends PositionedNode {
      */
     display(grid_map, position, ctx, colour) {
         super.display(grid_map, position, ctx, colour)
-        GridMap.displayNode(ctx, position, grid_map.cw > 10 ? () => {
+        GridMap.displayNode(ctx, position, grid_map.nodePixelWidth > 10 ? () => {
             ctx.scale(0.1, 0.1)
             ctx.font = "7px Arial"
             ctx.fillStyle = "#888"

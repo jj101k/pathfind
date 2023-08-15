@@ -15,7 +15,7 @@ class GridMap {
     /**
      *
      * @param {number} pixel_width
-     * @param {number} node_width
+     * @param {number} node_width How many nodes to fit
      */
     constructor(pixel_width, node_width) {
         this.finish = { x: 0, y: 0 }
@@ -24,7 +24,11 @@ class GridMap {
         this.start = { x: 0, y: 0 }
         this.pixelWidth = pixel_width
     }
-    get cw() {
+
+    /**
+     *
+     */
+    get nodePixelWidth() {
         return this.pixelWidth / this.nodeWidth
     }
 
@@ -33,11 +37,11 @@ class GridMap {
      * @param {CanvasRenderingContext2D} ctx
      */
     display(ctx) {
-        ctx.fillStyle = this.cw > 10 ? "white" : "#888"
+        ctx.fillStyle = this.nodePixelWidth > 10 ? "white" : "#888"
         ctx.fillRect(0, 0, this.nodeWidth, this.nodeWidth)
         ctx.beginPath()
         ctx.strokeStyle = "black"
-        if (this.cw >= 3) {
+        if (this.nodePixelWidth >= 3) {
             for (let x = 0; x <= this.nodeWidth; x++) {
                 ctx.moveTo(x, 0)
                 ctx.lineTo(x, this.nodeWidth)
@@ -46,7 +50,7 @@ class GridMap {
                 ctx.moveTo(0, y)
                 ctx.lineTo(this.nodeWidth, y)
             }
-            ctx.lineWidth = 2 / this.cw
+            ctx.lineWidth = 2 / this.nodePixelWidth
             ctx.stroke()
         }
         // Note: without this, the path appears to remain open, which puts a
