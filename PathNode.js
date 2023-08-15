@@ -118,6 +118,7 @@ class PathNode extends PositionedNode {
         super.display(grid_map, position, ctx, colour)
         GridMap.displayNode(ctx, position, grid_map.nodePixelWidth > 10 ? () => {
             ctx.scale(0.1, 0.1)
+            ctx.beginPath()
             ctx.font = "7px Arial"
             ctx.fillStyle = "#888"
             const m = ctx.measureText(this.fromDirection)

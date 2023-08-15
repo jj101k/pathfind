@@ -71,9 +71,6 @@ class GridMap {
             ctx.lineWidth = 2 / this.nodePixelWidth
             ctx.stroke()
         }
-        // Note: without this, the path appears to remain open, which puts a
-        // drain on rendering time for each frame
-        ctx.beginPath()
     }
 
     /**

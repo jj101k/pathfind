@@ -16,6 +16,7 @@ class PositionedNode {
      */
     display(grid_map, position, ctx, colour) {
         GridMap.displayNode(ctx, position, () => {
+            ctx.beginPath()
             ctx.fillStyle = colour
             ctx.fillRect(0.125, 0.125, 0.75, 0.75)
         })
