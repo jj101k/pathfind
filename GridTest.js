@@ -95,6 +95,7 @@ class GridTest {
             throw new Error("grid map is null")
 
         if(this.lastRoute.getCost(this.gridMap) === Infinity) {
+            console.log(this.lastRoute)
             alert("No route found")
         }
         const tr = document.createElement("tr")
@@ -380,7 +381,7 @@ class GridTest {
                 steps++
                 if (steps >= calibrated_steps) {
                     const tp = new Date().valueOf()
-                    const delta_ms = tp - t
+                    const delta_ms = Math.max(tp - t, 1)
                     calibrated_steps = Math.floor(steps * interval_ms / delta_ms)
                     inner_ms += delta_ms
                     total_steps += steps
