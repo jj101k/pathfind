@@ -12,6 +12,31 @@ class GridMap {
         action()
         ctx.restore()
     }
+
+    /**
+     *
+     */
+    #pixelWidth
+
+    /**
+     * @type {number}
+     */
+    #nodeWidth
+
+    /**
+     * @type {number}
+     */
+    nodePixelWidth
+
+    set nodeWidth(v) {
+        this.#nodeWidth = v
+        this.nodePixelWidth = this.#pixelWidth / this.nodeWidth
+    }
+
+    get nodeWidth() {
+        return this.#nodeWidth
+    }
+
     /**
      *
      * @param {number} pixel_width
@@ -22,14 +47,7 @@ class GridMap {
         this.nodeWidth = node_width
         this.source = GridMapSource.build(node_width)
         this.start = { x: 0, y: 0 }
-        this.pixelWidth = pixel_width
-    }
-
-    /**
-     *
-     */
-    get nodePixelWidth() {
-        return this.pixelWidth / this.nodeWidth
+        this.#pixelWidth = pixel_width
     }
 
     /**
