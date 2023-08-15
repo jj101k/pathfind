@@ -15,7 +15,7 @@ class Route {
      * @param {CanvasRenderingContext2D} ctx
      */
     display(grid_map, ctx) {
-        this.getNodes(grid_map).forEach(n => {
+        for(const n of this.getNodes(grid_map)) {
             const m = grid_map.nodeAt(n.x, n.y)
             if (!this.left)
                 throw new Error("this.left is null")
@@ -30,7 +30,7 @@ class Route {
             } else {
                 m.display(grid_map, n, ctx, "orange")
             }
-        })
+        }
     }
     /**
      *
@@ -48,7 +48,7 @@ class Route {
         } else {
             cost += 6
         }
-        this.getNodes(grid_map).forEach(n => {
+        for(const n of this.getNodes(grid_map)) {
             const m = grid_map.source.contentAt(n.x, n.y)
             const mf = PathNode.getFromPosition(n.x, n.y, m)
             if (mf.x == n.x || mf.y == n.y) {
@@ -56,7 +56,7 @@ class Route {
             } else {
                 cost += 6
             }
-        })
+        }
         return cost
     }
     /**
