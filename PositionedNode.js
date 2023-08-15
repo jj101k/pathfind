@@ -15,7 +15,7 @@ class PositionedNode {
      * @param {string} colour
      */
     display(grid_map, position, ctx, colour) {
-        if(grid_map.nodePixelWidth >= 3) {
+        if(grid_map.levelOfDetail >= 1) {
             // Large - leave space for grid lines
             GridMap.displayNode(ctx, position, () => {
                 ctx.beginPath()

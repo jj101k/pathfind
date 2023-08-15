@@ -24,6 +24,13 @@ class GridMap {
     #nodeWidth
 
     /**
+     * @type {0 | 1 | 2}
+     *
+     * 0 - very little; 1 - some; 2 - full
+     */
+    levelOfDetail
+
+    /**
      * @type {number}
      */
     nodePixelWidth
@@ -31,6 +38,13 @@ class GridMap {
     set nodeWidth(v) {
         this.#nodeWidth = v
         this.nodePixelWidth = this.#pixelWidth / this.#nodeWidth
+        if(this.nodePixelWidth >= 10) {
+            this.levelOfDetail = 2
+        } else if(this.nodePixelWidth >= 3) {
+            this.levelOfDetail = 1
+        } else {
+            this.levelOfDetail = 0
+        }
     }
 
     get nodeWidth() {
@@ -55,17 +69,20 @@ class GridMap {
      * @param {CanvasRenderingContext2D} ctx
      */
     display(ctx) {
-        if(this.nodePixelWidth > 10) {
-            ctx.fillStyle = "white"
-        } else if(this.nodePixelWidth > 3) {
-            ctx.fillStyle = "#888"
-        } else {
-            ctx.fillStyle = "#444"
+        switch(this.levelOfDetail) {
+            case 2:
+                ctx.fillStyle = "white"
+                break
+            case 1:
+                ctx.fillStyle = "#888"
+                break
+            default:
+                ctx.fillStyle = "#444"
         }
         ctx.fillRect(0, 0, this.nodeWidth, this.nodeWidth)
         ctx.beginPath()
         ctx.strokeStyle = "black"
-        if (this.nodePixelWidth >= 3) {
+        if (this.levelOfDetail >= 1) {
             for (let x = 0; x <= this.nodeWidth; x++) {
                 ctx.moveTo(x, 0)
                 ctx.lineTo(x, this.nodeWidth)
