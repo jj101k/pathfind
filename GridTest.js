@@ -373,6 +373,7 @@ class GridTest {
             let t = new Date().valueOf()
             let steps = 0
             let calibrated_steps = 10
+            console.log(`Starting with ${calibrated_steps} steps`)
             let inner_ms = 0
             while (running) {
                 running = this.step()
@@ -394,6 +395,7 @@ class GridTest {
                     pauses++
                 }
             }
+            console.log(`Finished with ${calibrated_steps} steps per frame`)
             this.innerRuntime = inner_ms + new Date().valueOf() - t
             total_steps += steps
         } else {
