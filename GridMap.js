@@ -27,6 +27,7 @@ class GridMap {
     get cw() {
         return this.pixelWidth / this.nodeWidth
     }
+
     /**
      *
      * @param {CanvasRenderingContext2D} ctx
@@ -48,7 +49,11 @@ class GridMap {
             ctx.lineWidth = 2 / this.cw
             ctx.stroke()
         }
+        // Note: without this, the path appears to remain open, which puts a
+        // drain on rendering time for each frame
+        ctx.beginPath()
     }
+
     /**
      *
      * @param {number} x
