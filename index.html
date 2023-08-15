@@ -35,6 +35,9 @@
                 <input type="number" data-readwrite="size"/>
                 x
                 <span data-read="size">?</span>
+                <small>
+                    1:1 would be <span data-read="oneToOneSize">?</small>
+                </small>
             </label></p>
             <p><label>
                 Obstruction density
@@ -77,13 +80,16 @@
                 nullTest() {
                     return t.nullTest(this.size)
                 },
+                get oneToOneSize() {
+                    return 600 * window.devicePixelRatio
+                },
                 randomTest() {
                     return t.randomTest(this.size)
                 },
                 set testNumber(v) {
                     this._testNumber = v
                     t.selectTest(v)
-                }
+                },
             }
 
             Frameworker.proxy(retainedData, t, [
