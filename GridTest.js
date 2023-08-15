@@ -180,10 +180,27 @@ class GridTest {
         const grid_map = new GridMap(pixel_width, node_width)
         grid_map.display(this.ctx)
 
+        // This reduces random calls
+        const invDensity = 1/this.density
+        const estimatedRandomBits = 48 // It should be more like 53
+        const densityBits = Math.ceil(Math.log2(invDensity))
+        const l = {v: Math.random(), c: 0, m: Math.floor(estimatedRandomBits / densityBits)}
+        const r = () => {
+            const o = l.v
+            l.v *= invDensity
+            l.v -= Math.floor(l.v)
+            l.c++
+            if(l.c >= l.m) {
+                l.v = Math.random()
+                l.c = 0
+            }
+            return o
+        }
+
         let t = new Date().valueOf()
         for (let y = 0; y < node_width; y++) {
             for (let x = 0; x < node_width; x++) {
-                if (Math.random() < this.density) {
+                if (r() < this.density) {
                     const o = { x: x, y: y }
                     obstructions.push(o)
                     grid_map.source.addNode(OBSTRUCTION_NODE, o, true)
