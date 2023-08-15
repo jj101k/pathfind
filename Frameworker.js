@@ -11,8 +11,9 @@ class Frameworker {
      * @param {Object} f
      * @param {(keyof f)[]} ks
      * @param {{[k: keyof f]: string}} mapped
+     * @param {(keyof f)[]} methods
      */
-    static proxy(o, f, ks, mapped = {}) {
+    static proxy(o, f, ks, mapped = {}, methods = []) {
         for(const k of ks) {
             Object.defineProperty(o, k, {
                 get: () => f[k],
@@ -27,6 +28,11 @@ class Frameworker {
                 set(v) {
                     f[k] = v
                 },
+            })
+        }
+        for(const m of methods) {
+            Object.defineProperty(o, m, {
+                get: () => f[m].bind(f),
             })
         }
     }

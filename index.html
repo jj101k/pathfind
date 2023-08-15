@@ -87,8 +87,8 @@
             }
 
             Frameworker.proxy(retainedData, t, [
-                "blind", "density", "paused", "randomCornerToCorner", "step",
-                "runAll", "nextTest"], {testNumber: "_testNumber"})
+                "blind", "density", "paused", "randomCornerToCorner"],
+                {testNumber: "_testNumber"}, ["step", "runAll", "nextTest"])
 
             const f = new Frameworker(retainedData)
             f.addEventListener("init", () => {
