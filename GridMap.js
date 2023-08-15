@@ -30,7 +30,7 @@ class GridMap {
 
     set nodeWidth(v) {
         this.#nodeWidth = v
-        this.nodePixelWidth = this.#pixelWidth / this.nodeWidth
+        this.nodePixelWidth = this.#pixelWidth / this.#nodeWidth
     }
 
     get nodeWidth() {
@@ -43,11 +43,11 @@ class GridMap {
      * @param {number} node_width How many nodes to fit
      */
     constructor(pixel_width, node_width) {
+        this.#pixelWidth = pixel_width
         this.finish = { x: 0, y: 0 }
         this.nodeWidth = node_width
         this.source = GridMapSource.build(node_width)
         this.start = { x: 0, y: 0 }
-        this.#pixelWidth = pixel_width
     }
 
     /**
