@@ -93,6 +93,10 @@ class GridTest {
         }
         if (!this.gridMap)
             throw new Error("grid map is null")
+
+        if(this.lastRoute.getCost(this.gridMap) === Infinity) {
+            alert("No route found")
+        }
         const tr = document.createElement("tr")
         let td = document.createElement("td")
         td.textContent = this.testNumber === null ?
