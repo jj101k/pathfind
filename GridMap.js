@@ -55,7 +55,13 @@ class GridMap {
      * @param {CanvasRenderingContext2D} ctx
      */
     display(ctx) {
-        ctx.fillStyle = this.nodePixelWidth > 10 ? "white" : "#888"
+        if(this.nodePixelWidth > 10) {
+            ctx.fillStyle = "white"
+        } else if(this.nodePixelWidth > 3) {
+            ctx.fillStyle = "#888"
+        } else {
+            ctx.fillStyle = "#444"
+        }
         ctx.fillRect(0, 0, this.nodeWidth, this.nodeWidth)
         ctx.beginPath()
         ctx.strokeStyle = "black"
