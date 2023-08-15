@@ -74,7 +74,13 @@ class GridMap {
                 ctx.moveTo(0, y)
                 ctx.lineTo(this.nodeWidth, y)
             }
-            ctx.lineWidth = 2 / this.nodePixelWidth
+            if(this.nodeWidth >= 10) {
+                // 2 pixels wide
+                ctx.lineWidth = 2 / this.nodePixelWidth
+            } else {
+                // 1 pixel wide
+                ctx.lineWidth = 1 / this.nodePixelWidth
+            }
             ctx.stroke()
         }
     }
