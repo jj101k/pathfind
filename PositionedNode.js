@@ -15,10 +15,20 @@ class PositionedNode {
      * @param {string} colour
      */
     display(grid_map, position, ctx, colour) {
-        GridMap.displayNode(ctx, position, () => {
-            ctx.beginPath()
-            ctx.fillStyle = colour
-            ctx.fillRect(0.125, 0.125, 0.75, 0.75)
-        })
+        if(grid_map.nodePixelWidth >= 3) {
+            // Large - leave space for grid lines
+            GridMap.displayNode(ctx, position, () => {
+                ctx.beginPath()
+                ctx.fillStyle = colour
+                ctx.fillRect(0.125, 0.125, 0.75, 0.75)
+            })
+        } else {
+            // Small - just blocks
+            GridMap.displayNode(ctx, position, () => {
+                ctx.beginPath()
+                ctx.fillStyle = colour
+                ctx.fillRect(0, 0, 1, 1)
+            })
+        }
     }
 }
