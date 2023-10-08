@@ -39,8 +39,12 @@ class Frameworker {
             })
         }
         for(const m of methods) {
+            const c = f[m]
+            if(typeof c != "function") {
+                throw new Error(`Property ${m.toString()} is not a method`)
+            }
             Object.defineProperty(o, m, {
-                get: () => f[m].bind(f),
+                get: () => c.bind(f),
             })
         }
     }
@@ -159,7 +163,7 @@ class Frameworker {
                 const optionsKey = he.dataset.options
                 // Options mode - rewrite.
                 he.addEventListener("change", () => {
-                    this.#retainedData[key] = this.#retainedData[optionsKey][e.value]
+                    this.#retainedData[key] = this.#retainedData[optionsKey][he.value]
                 })
                 const updateValue = () => {
                     for(const [k, v] of this.#optionKeyValues(optionsKey)) {
