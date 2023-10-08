@@ -7,6 +7,11 @@
  */
 class Frameworker {
     /**
+     * This modifies `o` to proxy `f[k]` for `ks`, similar for `mapped` but with
+     * different names, and properly proxy methods `methods`.
+     *
+     * You can safely do this multiple times, but old names will be overwritten.
+     *
      * @template T
      * @param {Object} o
      * @param {T} f
@@ -93,6 +98,13 @@ class Frameworker {
     }
 
     /**
+     * Connects to the form.
+     *
+     * *[data-readwrite]: these get bidirectional data mapping
+     * *[data-read]: these get unidirectional data mapping (replacing textContent)
+     * *[data-call]: these trigger an action (click)
+     * select[data-options]: These get options from the supplied key-value property
+     *
      * @param {HTMLElement} form
      */
     init(form) {
