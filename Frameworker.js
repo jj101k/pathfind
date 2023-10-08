@@ -7,10 +7,11 @@
  */
 class Frameworker {
     /**
+     * @template T
      * @param {Object} o
-     * @param {Object} f
-     * @param {(keyof f)[]} ks
-     * @param {{[k: keyof f]: string}} mapped
+     * @param {T} f
+     * @param {(keyof T)[]} ks
+     * @param {Partial<Record<keyof T, string>>} mapped
      * @param {(keyof f)[]} methods
      */
     static proxy(o, f, ks, mapped = {}, methods = []) {
