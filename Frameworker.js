@@ -124,11 +124,17 @@ class Frameworker {
                     this.#retainedData[key] = he.checked
                 })
                 he.checked = this.#retainedData[key]
+                this.#listeners[key].push(
+                    () => he.checked = this.#retainedData[key]
+                )
             } else {
                 he.addEventListener("change", () => {
                     this.#retainedData[key] = he.value
                 })
                 he.value = this.#retainedData[key]
+                this.#listeners[key].push(
+                    () => he.value = this.#retainedData[key]
+                )
             }
             he.addEventListener("change", () => {
                 for(const l of this.#listeners[key]) {
