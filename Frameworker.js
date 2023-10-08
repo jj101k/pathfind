@@ -1,3 +1,5 @@
+//@ts-check
+
 /**
  * @typedef {"beforeinit" | "init"} FrameworkerEventName
  */
@@ -98,6 +100,15 @@ class Frameworker {
     }
 
     /**
+     *
+     * @param {string} key
+     * @returns
+     */
+    #optionKeyValues(key) {
+        return Object.entries(this.#retainedData[key])
+    }
+
+    /**
      * Connects to the form.
      *
      * *[data-readwrite]: these get bidirectional data mapping
@@ -109,6 +120,23 @@ class Frameworker {
      */
     init(form) {
         this.dispatchEvent(new Event("beforeinit"))
+        for(const e of form.querySelectorAll("select[data-options]")) {
+            /**
+             * @type {HTMLSelectElement}
+             */
+            const se = e
+            /**
+             * @type {string}
+             */
+            const options = se.dataset.options
+            const document = se.ownerDocument
+            for(const [k, v] of this.#optionKeyValues(options)) {
+                const option = document.createElement("option")
+                option.value = k
+                option.textContent = v.name
+                se.append(option)
+            }
+        }
         for(const e of form.querySelectorAll("[data-readwrite]")) {
             /**
              * @type {HTMLInputElement}
@@ -127,6 +155,23 @@ class Frameworker {
                 this.#listeners[key].push(
                     () => he.checked = this.#retainedData[key]
                 )
+            } else if(he.dataset.options) {
+                const optionsKey = he.dataset.options
+                // Options mode - rewrite.
+                he.addEventListener("change", () => {
+                    this.#retainedData[key] = this.#retainedData[optionsKey][e.value]
+                })
+                const updateValue = () => {
+                    for(const [k, v] of this.#optionKeyValues(optionsKey)) {
+                        if(v === this.#retainedData[key]) {
+                            he.value = k
+                            break
+                        }
+                    }
+                }
+                updateValue()
+
+                this.#listeners[key].push(updateValue)
             } else {
                 he.addEventListener("change", () => {
                     this.#retainedData[key] = he.value
