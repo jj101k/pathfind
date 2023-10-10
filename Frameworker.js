@@ -116,7 +116,9 @@ class Frameworker {
      * Connects to the form.
      *
      * *[data-readwrite]: these get bidirectional data mapping
-     * *[data-read]: these get unidirectional data mapping (replacing textContent)
+     * *[data-read]: these get unidirectional data mapping (replacing
+     * textContent). This may have data-read-trigger to announce what the actual
+     * trigger for updating this value is.
      * *[data-call]: these trigger an action (click)
      * select[data-options]: These get options from the supplied key-value property
      *
@@ -201,7 +203,9 @@ class Frameworker {
              */
             const key = he.dataset.read
             this.#assertKey(key)
-            this.#listeners[key].push(
+            const triggerKey = he.dataset["read-trigger"] ?? key
+            this.#assertKey(triggerKey)
+            this.#listeners[triggerKey].push(
                 () => he.textContent = this.#retainedData[key]
             )
             he.textContent = this.#retainedData[key]
