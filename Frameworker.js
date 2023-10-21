@@ -121,6 +121,7 @@ class Frameworker {
      * trigger for updating this value is.
      * *[data-call]: these trigger an action (click)
      * select[data-options]: These get options from the supplied key-value property
+     * fieldset[data-options]: These get radio inputs from the supplied key-value property
      *
      * @param {HTMLElement} form
      */
@@ -143,7 +144,79 @@ class Frameworker {
                 se.append(option)
             }
         }
-        for(const e of form.querySelectorAll("[data-readwrite]")) {
+        for(const e of form.querySelectorAll("fieldset[data-options]")) {
+            /**
+             * @type {HTMLSelectElement}
+             */
+            const se = e
+            /**
+             * @type {string}
+             */
+            const options = se.dataset.options
+            const document = se.ownerDocument
+            const name = "" + Math.random()
+            for(const [k, v] of this.#optionKeyValues(options)) {
+                const input = document.createElement("input")
+                input.type = "radio"
+                input.name = name
+                input.value = k
+                input.textContent = v.name
+                const label = document.createElement("label")
+                label.append(input)
+                label.append(" " + v.name)
+                se.append(label)
+            }
+        }
+        for(const e of form.querySelectorAll("fieldset[data-readwrite]")) {
+            /**
+             * @type {HTMLFieldSetElement}
+             */
+            const he = e
+            /**
+             * @type {string}
+             */
+            const key = he.dataset.readwrite
+            this.#assertKey(key)
+            /**
+             * @type {string}
+             */
+            const optionsKey = he.dataset.options
+            this.#assertKey(optionsKey)
+            for(const le of he.querySelectorAll("label")) {
+                /**
+                 * @type {HTMLLabelElement}
+                 */
+                const hle = le
+                const ie = hle.querySelector("input")
+                if(ie instanceof HTMLInputElement) {
+                    he.addEventListener("change", () => {
+                        if(ie.checked) {
+                            this.#retainedData[key] = this.#retainedData[optionsKey][ie.value]
+                            hle.classList.add("selected")
+                        } else {
+                            hle.classList.remove("selected")
+                        }
+                    })
+                    ie.checked = (this.#retainedData[key] == this.#retainedData[optionsKey][ie.value])
+                    if(ie.checked) {
+                        hle.classList.add("selected")
+                    } else {
+                        hle.classList.remove("selected")
+                    }
+                    this.#listeners[key].push(
+                        () => {
+                            ie.checked = (this.#retainedData[key] == this.#retainedData[optionsKey][ie.value])
+                            if(ie.value) {
+                                hle.classList.add("selected")
+                            } else {
+                                hle.classList.remove("selected")
+                            }
+                        }
+                    )
+                }
+            }
+        }
+        for(const e of form.querySelectorAll("input[data-readwrite]")) {
             /**
              * @type {HTMLInputElement}
              */
