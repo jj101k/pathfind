@@ -54,11 +54,6 @@ class Frameworker {
     #eventListeners = {}
 
     /**
-     * @type {{[k: string]: (() => any)[]}}
-     */
-    #listeners = {}
-
-    /**
      * @type {{[k: string]: any}}
      */
     #retainedData
@@ -71,7 +66,6 @@ class Frameworker {
         if(!(key in this.#retainedData)) {
             console.warn(`Key ${key} isn't recognised`)
         }
-        this.#listeners[key] = this.#listeners[key] || []
     }
 
     /**
@@ -83,7 +77,7 @@ class Frameworker {
 
     /**
      *
-     * @param {FrameworkerEventName} event_name
+     * @param {FrameworkerEventName | string} event_name
      * @param {() => any} handler
      */
     addEventListener(event_name, handler) {
@@ -203,16 +197,14 @@ class Frameworker {
                     } else {
                         hle.classList.remove("selected")
                     }
-                    this.#listeners[key].push(
-                        () => {
-                            ie.checked = (this.#retainedData[key] == this.#retainedData[optionsKey][ie.value])
-                            if(ie.value) {
-                                hle.classList.add("selected")
-                            } else {
-                                hle.classList.remove("selected")
-                            }
+                    this.addEventListener(`update:${key}`, () => {
+                        ie.checked = (this.#retainedData[key] == this.#retainedData[optionsKey][ie.value])
+                        if(ie.value) {
+                            hle.classList.add("selected")
+                        } else {
+                            hle.classList.remove("selected")
                         }
-                    )
+                    })
                 }
             }
         }
@@ -231,9 +223,7 @@ class Frameworker {
                     this.#retainedData[key] = he.checked
                 })
                 he.checked = this.#retainedData[key]
-                this.#listeners[key].push(
-                    () => he.checked = this.#retainedData[key]
-                )
+                this.addEventListener(`update:${key}`, () => he.checked = this.#retainedData[key])
             } else if(he.dataset.options) {
                 const optionsKey = he.dataset.options
                 // Options mode - rewrite.
@@ -250,21 +240,15 @@ class Frameworker {
                 }
                 updateValue()
 
-                this.#listeners[key].push(updateValue)
+                this.addEventListener(`update:${key}`, updateValue)
             } else {
                 he.addEventListener("change", () => {
                     this.#retainedData[key] = he.value
                 })
                 he.value = this.#retainedData[key]
-                this.#listeners[key].push(
-                    () => he.value = this.#retainedData[key]
-                )
+                this.addEventListener(`update:${key}`, () => he.value = this.#retainedData[key])
             }
-            he.addEventListener("change", () => {
-                for(const l of this.#listeners[key]) {
-                    l()
-                }
-            })
+            he.addEventListener("change", () => this.dispatchEvent(new Event(`update:${key}`)))
         }
         for(const e of form.querySelectorAll("[data-read]")) {
             /**
@@ -278,9 +262,7 @@ class Frameworker {
             this.#assertKey(key)
             const triggerKey = he.dataset["read-trigger"] ?? key
             this.#assertKey(triggerKey)
-            this.#listeners[triggerKey].push(
-                () => he.textContent = this.#retainedData[key]
-            )
+            this.addEventListener(`update:${triggerKey}`, () => he.textContent = this.#retainedData[key])
             he.textContent = this.#retainedData[key]
         }
 
@@ -302,7 +284,7 @@ class Frameworker {
 
     /**
      *
-     * @param {FrameworkerEventName} event_name
+     * @param {FrameworkerEventName | string} event_name
      * @param {() => any} handler
      */
     removeEventListener(event_name, handler) {
