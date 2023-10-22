@@ -130,13 +130,31 @@ class Frameworker {
              * @type {string}
              */
             const options = se.dataset.options
+            this.#assertKey(options)
             const document = se.ownerDocument
-            for(const [k, v] of this.#optionKeyValues(options)) {
-                const option = document.createElement("option")
-                option.value = k
-                option.textContent = v.name
-                se.append(option)
+
+            /**
+             * @type {HTMLOptionElement[]}
+             */
+            let addedOptions = []
+
+            const addOptions = () => {
+                const value = se.value
+                for(const oldOption of addedOptions) {
+                    se.removeChild(oldOption)
+                }
+                addedOptions = []
+                for(const [k, v] of this.#optionKeyValues(options)) {
+                    const option = document.createElement("option")
+                    option.value = k
+                    option.textContent = v.name
+                    addedOptions.push(option)
+                    se.append(option)
+                }
+                se.value = value
             }
+            addOptions()
+            this.addEventListener(`update:${options}`, () => addOptions())
         }
         for(const e of form.querySelectorAll("fieldset[data-options]")) {
             /**
@@ -147,19 +165,49 @@ class Frameworker {
              * @type {string}
              */
             const options = se.dataset.options
+            this.#assertKey(options)
             const document = se.ownerDocument
             const name = "" + Math.random()
-            for(const [k, v] of this.#optionKeyValues(options)) {
-                const input = document.createElement("input")
-                input.type = "radio"
-                input.name = name
-                input.value = k
-                input.textContent = v.name
-                const label = document.createElement("label")
-                label.append(input)
-                label.append(" " + v.name)
-                se.append(label)
+
+            /**
+             * @type {HTMLLabelElement[]}
+             */
+            let addedOptions = []
+            const addOptions = () => {
+                /**
+                 * @type {string | undefined}
+                 */
+                let oldValue
+                for(const oldOption of addedOptions) {
+                    /**
+                     * @type {HTMLInputElement | null}
+                     */
+                    const input = oldOption.querySelector("input")
+                    if(input?.checked) {
+                        oldValue = input.value
+                    }
+                    if(oldOption.querySelector("input")?.selected)
+                    se.removeChild(oldOption)
+                }
+                addedOptions = []
+                for(const [k, v] of this.#optionKeyValues(options)) {
+                    const input = document.createElement("input")
+                    input.type = "radio"
+                    input.name = name
+                    input.value = k
+                    input.textContent = v.name
+                    if(oldValue === k) {
+                        input.checked = true
+                    }
+                    const label = document.createElement("label")
+                    label.append(input)
+                    label.append(" " + v.name)
+                    addedOptions.push(label)
+                    se.append(label)
+                }
             }
+            addOptions()
+            this.addEventListener(`update:${options}`, () => addOptions())
         }
         for(const e of form.querySelectorAll("fieldset[data-readwrite]")) {
             /**
@@ -225,6 +273,7 @@ class Frameworker {
                 he.checked = this.#retainedData[key]
                 this.addEventListener(`update:${key}`, () => he.checked = this.#retainedData[key])
             } else if(he.dataset.options) {
+                // <select>
                 const optionsKey = he.dataset.options
                 // Options mode - rewrite.
                 he.addEventListener("change", () => {
