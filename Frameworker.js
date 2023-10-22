@@ -256,7 +256,7 @@ class Frameworker {
                 }
             }
         }
-        for(const e of form.querySelectorAll("input[data-readwrite]")) {
+        for(const e of form.querySelectorAll("input[data-readwrite], select[data-readwrite]")) {
             /**
              * @type {HTMLInputElement}
              */
