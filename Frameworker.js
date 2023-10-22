@@ -158,15 +158,15 @@ class Frameworker {
         }
         for(const e of form.querySelectorAll("fieldset[data-options]")) {
             /**
-             * @type {HTMLSelectElement}
+             * @type {HTMLFieldSetElement}
              */
-            const se = e
+            const fe = e
             /**
              * @type {string}
              */
-            const options = se.dataset.options
+            const options = fe.dataset.options
             this.#assertKey(options)
-            const document = se.ownerDocument
+            const document = fe.ownerDocument
             const name = "" + Math.random()
 
             /**
@@ -187,7 +187,7 @@ class Frameworker {
                         oldValue = input.value
                     }
                     if(oldOption.querySelector("input")?.selected)
-                    se.removeChild(oldOption)
+                    fe.removeChild(oldOption)
                 }
                 addedOptions = []
                 for(const [k, v] of this.#optionKeyValues(options)) {
@@ -203,7 +203,7 @@ class Frameworker {
                     label.append(input)
                     label.append(" " + v.name)
                     addedOptions.push(label)
-                    se.append(label)
+                    fe.append(label)
                 }
             }
             addOptions()
