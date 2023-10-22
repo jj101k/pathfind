@@ -186,7 +186,6 @@ class Frameworker {
                     if(input?.checked) {
                         oldValue = input.value
                     }
-                    if(oldOption.querySelector("input")?.selected)
                     fe.removeChild(oldOption)
                 }
                 addedOptions = []
