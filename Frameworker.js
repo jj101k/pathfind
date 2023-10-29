@@ -370,6 +370,35 @@ class Frameworker {
     }
 
     /**
+     *
+     * @template T
+     * @param {any} e
+     * @param {T} t
+     * @returns {InstanceType<T>}
+     */
+    #assertHtmlElement(e, t) {
+        //@ts-ignore
+        if(e instanceof t) {
+            return e
+        } else {
+            throw new Error(`Internal type error: not HTML element`)
+        }
+    }
+
+    /**
+     *
+     * @param {HTMLElement} e
+     * @param {string} key
+     */
+    #assertDatum(e, key) {
+        const v = e.dataset[key]
+        if(v === undefined) {
+            throw new Error(`Internal type error: not string`)
+        }
+        return v
+    }
+
+    /**
      * Connects to the form.
      *
      * *[data-readwrite]: these get bidirectional data mapping
@@ -386,28 +415,16 @@ class Frameworker {
         this.dispatchEvent(new Event("beforeinit"))
 
         for(const e of form.querySelectorAll("select[data-options]")) {
-            /**
-             * @type {HTMLSelectElement}
-             */
-            const se = e
-            /**
-             * @type {string}
-             */
-            const options = se.dataset.options
+            const se = this.#assertHtmlElement(e, HTMLSelectElement)
+            const options = this.#assertDatum(se, "options")
             this.#assertKey(options)
 
             this.#x.selectOptions.push({he: se, options})
         }
 
         for(const e of form.querySelectorAll("[data-options]:not(select)")) {
-            /**
-             * @type {HTMLElement}
-             */
-            const he = e
-            /**
-             * @type {string}
-             */
-            const options = he.dataset.options
+            const he = this.#assertHtmlElement(e, HTMLElement)
+            const options = this.#assertDatum(he, "options")
             this.#assertKey(options)
 
             const ps = new PseudoSelect(he)
@@ -420,27 +437,15 @@ class Frameworker {
         }
 
         for(const e of form.querySelectorAll("input[data-readwrite]")) {
-            /**
-             * @type {HTMLInputElement}
-             */
-            const he = e
-            /**
-             * @type {string}
-             */
-            const key = he.dataset.readwrite
+            const he = this.#assertHtmlElement(e, HTMLInputElement)
+            const key = this.#assertDatum(he, "readwrite")
             this.#assertKey(key)
             this.#x.inputRw.push({key, he})
         }
 
         for(const e of form.querySelectorAll("select[data-readwrite]")) {
-            /**
-             * @type {HTMLSelectElement}
-             */
-            const he = e
-            /**
-             * @type {string}
-             */
-            const key = he.dataset.readwrite
+            const he = this.#assertHtmlElement(e, HTMLSelectElement)
+            const key = this.#assertDatum(he, "readwrite")
             this.#assertKey(key)
 
             // Detect change
@@ -451,29 +456,18 @@ class Frameworker {
         }
 
         for(const e of form.querySelectorAll("[data-read]")) {
-            /**
-             * @type {HTMLElement}
-             */
-            const he = e
-            /**
-             * @type {string}
-             */
-            const key = he.dataset.read
+            const he = this.#assertHtmlElement(e, HTMLElement)
+            const key = this.#assertDatum(he, "read")
             this.#assertKey(key)
+
             const triggerKey = he.dataset["read-trigger"]
             this.#assertKey(triggerKey ?? key)
             this.#x.read.push({he, key, triggerKey})
         }
 
         for(const e of form.querySelectorAll("[data-call]")) {
-            /**
-             * @type {HTMLButtonElement}
-             */
-            const he = e
-            /**
-             * @type {string}
-             */
-            const key = he.dataset.call
+            const he = this.#assertHtmlElement(e, HTMLButtonElement)
+            const key = this.#assertDatum(he, "call")
             this.#x.call.push({he, key})
         }
 
