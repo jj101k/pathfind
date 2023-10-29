@@ -8,12 +8,24 @@
  *
  */
 class PseudoSelectOption {
+    /**
+     *
+     */
     #element
 
+    /**
+     *
+     */
     #selectedStore = false
 
+    /**
+     *
+     */
     value = ""
 
+    /**
+     *
+     */
     get selected() {
         return this.#selectedStore
 
@@ -26,6 +38,10 @@ class PseudoSelectOption {
         }
         this.#selectedStore = v
     }
+
+    /**
+     *
+     */
     get textContent() {
         return this.#element.textContent
     }
@@ -73,6 +89,11 @@ class PseudoSelectOption {
  *
  */
 class PseudoSelect {
+    /**
+     * @type {ReturnType<setTimeout> | undefined}
+     */
+    #changeTimeout
+
     #element
 
     /**
@@ -80,13 +101,14 @@ class PseudoSelect {
      */
     #eventListeners = {}
 
-    #changeTimeout
-
     /**
      * @type {PseudoSelectOption | undefined}
      */
     #selectedStore
 
+    /**
+     *
+     */
     #changed() {
         if(this.#changeTimeout) {
             clearTimeout(this.#changeTimeout)
@@ -96,6 +118,9 @@ class PseudoSelect {
         }, 100)
     }
 
+    /**
+     *
+     */
     value
 
     /**
@@ -107,6 +132,9 @@ class PseudoSelect {
         this.value = ""
     }
 
+    /**
+     *
+     */
     get #selected() {
         return this.#selectedStore
     }
@@ -184,6 +212,15 @@ class AnySelectOptionsAdder {
     document
 
     /**
+     * @protected
+     * @abstract
+     * @returns {U}
+     */
+    createOption() {
+        throw new Error("Not implemented")
+    }
+
+    /**
      *
      * @param {T} s
      * @param {Document} document
@@ -191,14 +228,6 @@ class AnySelectOptionsAdder {
     constructor(s, document) {
         this.#select = s
         this.document = document
-    }
-    /**
-     * @protected
-     * @abstract
-     * @returns {U}
-     */
-    createOption() {
-        throw new Error("Not implemented")
     }
 
     /**
@@ -341,6 +370,19 @@ class Frameworker {
 
     /**
      *
+     * @param {HTMLElement} form
+     * @param {string} dataKey
+     * @param {string} [expr]
+     * @returns {{he: HTMLElement, key: string}[]}
+     */
+    #findAnyElements(form, dataKey, expr) {
+        const es = form.querySelectorAll(`${expr ?? ""}[data-${dataKey}]`)
+        //@ts-ignore
+        return [...es].map((e) => ({he: e, key: e.dataset[dataKey]}))
+    }
+
+    /**
+     *
      * @param {string} key
      * @param {string | number | boolean} value
      */
@@ -411,19 +453,6 @@ class Frameworker {
                 l.call(this.#retainedData)
             }
         }
-    }
-
-    /**
-     *
-     * @param {HTMLElement} form
-     * @param {string} dataKey
-     * @param {string} [expr]
-     * @returns {{he: HTMLElement, key: string}[]}
-     */
-    #findAnyElements(form, dataKey, expr) {
-        const es = form.querySelectorAll(`${expr ?? ""}[data-${dataKey}]`)
-        //@ts-ignore
-        return [...es].map((e) => ({he: e, key: e.dataset[dataKey]}))
     }
 
     /**
