@@ -530,10 +530,8 @@ class Frameworker {
      * @param {() => any} handler
      */
     removeEventListener(event_name, handler) {
-        if(this.#eventListeners[event_name]) {
-            this.#eventListeners[event_name] = this.#eventListeners[event_name].filter(
-                v => v != handler
-            )
-        }
+        this.#eventListeners[event_name] = this.#eventListeners[event_name]?.filter(
+            v => v != handler
+        )
     }
 }
