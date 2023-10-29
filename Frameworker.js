@@ -32,9 +32,9 @@ class PseudoSelectOption {
     }
     set selected(v) {
         if(v) {
-            this.#element.classList.add("selected")
+            this.#element.dataset.selected = ""
         } else {
-            this.#element.classList.remove("selected")
+            delete this.#element.dataset.selected
         }
         this.#selectedStore = v
     }
