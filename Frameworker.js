@@ -427,7 +427,7 @@ class Frameworker {
      * @param {Document} document
      * @param {Record<string, {options: Record<string, {name: string}>}>} htmlValueMapper
      */
-    constructor(retainedData, document, htmlValueMapper) {
+    constructor(retainedData, document, htmlValueMapper = {}) {
         this.#retainedData = retainedData
         this.#document = document
         this.#htmlValueMapper = htmlValueMapper
