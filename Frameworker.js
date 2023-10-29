@@ -7,6 +7,241 @@
 /**
  *
  */
+class PseudoSelectOption {
+    #element
+
+    #selectedStore = false
+
+    value = ""
+
+    get selected() {
+        return this.#selectedStore
+
+    }
+    set selected(v) {
+        if(v) {
+            this.#element.classList.add("selected")
+        } else {
+            this.#element.classList.remove("selected")
+        }
+        this.#selectedStore = v
+    }
+    get textContent() {
+        return this.#element.textContent
+    }
+
+    set textContent(v) {
+        this.#element.textContent = v
+    }
+
+    /**
+     *
+     * @param {Document} document
+     */
+    constructor(document) {
+        this.#element = document.createElement("div")
+        this.#element.dataset["pseudo-option"] = ""
+    }
+
+    /**
+     *
+     * @param {string} event_name
+     * @param {() => any} handler
+     */
+    addEventListener(event_name, handler) {
+        return this.#element.addEventListener(event_name, handler)
+    }
+
+    /**
+     *
+     * @param {HTMLElement} e
+     */
+    appendTo(e) {
+        e.append(this.#element)
+    }
+
+    /**
+     *
+     * @param {HTMLElement} e
+     */
+    removeFrom(e) {
+        e.removeChild(this.#element)
+    }
+}
+
+/**
+ *
+ */
+class PseudoSelect {
+    #element
+
+    /**
+     * @type {{[event_name: string]: (() => any)[]}}
+     */
+    #eventListeners = {}
+
+    #changeTimeout
+
+    /**
+     * @type {PseudoSelectOption | undefined}
+     */
+    #selectedStore
+
+    #changed() {
+        if(this.#changeTimeout) {
+            clearTimeout(this.#changeTimeout)
+        }
+        this.#changeTimeout = setTimeout(() => {
+            this.dispatchEvent(new Event("change"))
+        }, 100)
+    }
+
+    value
+
+    /**
+     *
+     * @param {HTMLElement} element
+     */
+    constructor(element) {
+        this.#element = element
+        this.value = ""
+    }
+
+    get #selected() {
+        return this.#selectedStore
+    }
+    set #selected(v) {
+        if(this.#selectedStore) {
+            this.#selectedStore.selected = false
+        }
+        this.#selectedStore = v
+        if(v) {
+            this.value = v.value
+            v.selected = true
+        }
+        this.#changed()
+    }
+
+    /**
+     *
+     * @param {string} event_name
+     * @param {() => any} handler
+     */
+    addEventListener(event_name, handler) {
+        this.#eventListeners[event_name] = this.#eventListeners[event_name] || []
+        this.#eventListeners[event_name].push(handler)
+    }
+
+    /**
+     *
+     * @param {PseudoSelectOption} option
+     */
+    append(option) {
+        option.addEventListener("click", () => this.#selected = option)
+        option.appendTo(this.#element)
+    }
+
+    /**
+     *
+     * @param {Event} event
+     */
+    dispatchEvent(event) {
+        if(this.#eventListeners[event.type]) {
+            for(const l of this.#eventListeners[event.type]) {
+                l.call(this)
+            }
+        }
+    }
+
+    /**
+     *
+     * @param {PseudoSelectOption} option
+     */
+    removeChild(option) {
+        option.removeFrom(this.#element)
+        if(this.#selected === option) {
+            this.value = ""
+        }
+    }
+}
+
+/**
+ * @abstract
+ * @template {{append(u: U): any, value: string, removeChild(u: U): any}} T
+ * @template {PseudoSelectOption | HTMLOptionElement} U
+ */
+class AnySelectOptionsAdder {
+    /**
+     * @type {U[]}
+     */
+    #addedOptions = []
+
+    #select
+
+    /**
+     * @protected
+     */
+    document
+
+    /**
+     *
+     * @param {T} s
+     * @param {Document} document
+     */
+    constructor(s, document) {
+        this.#select = s
+        this.document = document
+    }
+    /**
+     * @protected
+     * @abstract
+     * @returns {U}
+     */
+    createOption() {
+        throw new Error("Not implemented")
+    }
+
+    /**
+     * @param {[string, {name: string}][]} options
+     */
+    addOptions(options) {
+        const value = this.#select.value
+        for (const oldOption of this.#addedOptions) {
+            this.#select.removeChild(oldOption)
+        }
+        this.addedOptions = []
+        for (const [k, v] of options) {
+            const option = this.createOption()
+            option.value = k
+            option.textContent = v.name
+            this.addedOptions.push(option)
+            this.#select.append(option)
+        }
+        this.#select.value = value
+    }
+}
+
+/**
+ * @extends {AnySelectOptionsAdder<HTMLSelectElement, HTMLOptionElement>}
+ */
+class SelectOptionsAdder extends AnySelectOptionsAdder {
+    createOption() {
+        return this.document.createElement("option")
+    }
+}
+
+/**
+ * @extends {AnySelectOptionsAdder<PseudoSelect, PseudoSelectOption>}
+ */
+class PseudoSelectOptionsAdder extends AnySelectOptionsAdder {
+    createOption() {
+        return new PseudoSelectOption(this.document)
+    }
+}
+
+/**
+ *
+ */
 class Frameworker {
     /**
      * This modifies `o` to proxy `f[k]` for `ks`, similar for `mapped` but with
@@ -48,15 +283,41 @@ class Frameworker {
             })
         }
     }
+
+    #document
+
     /**
      * @type {{[event_name: string]: (() => any)[]}}
      */
     #eventListeners = {}
 
-    /**
-     * @type {{[k: string]: any}}
-     */
     #retainedData
+
+    /**
+     *
+     */
+    #x = {
+        /**
+         * @type {{he: HTMLSelectElement | PseudoSelect, options: string}[]}
+         */
+        selectOptions: [],
+        /**
+         * @type {{he: HTMLInputElement, key: string}[]}
+         */
+        inputRw: [],
+        /**
+         * @type {{he: HTMLSelectElement | PseudoSelect, key: string, optionsKey: string | undefined}[]}
+         */
+        selectRw: [],
+        /**
+         * @type {{he: HTMLElement, key: string, triggerKey: string | undefined}[]}
+         */
+        read: [],
+        /**
+         * @type {{he: HTMLButtonElement, key: string}[]}
+         */
+        call: [],
+    }
 
     /**
      *
@@ -69,10 +330,12 @@ class Frameworker {
     }
 
     /**
-     * @type {{[k: string]: any}}
+     * @param {{[k: string]: any}} retainedData
+     * @param {Document} document
      */
-    constructor(retainedData) {
+    constructor(retainedData, document) {
         this.#retainedData = retainedData
+        this.#document = document
     }
 
     /**
@@ -115,12 +378,13 @@ class Frameworker {
      * trigger for updating this value is.
      * *[data-call]: these trigger an action (click)
      * select[data-options]: These get options from the supplied key-value property
-     * fieldset[data-options]: These get radio inputs from the supplied key-value property
+     * *[data-options]: These get turned into a pseudo-select with options from the supplied key-value property
      *
      * @param {HTMLElement} form
      */
     init(form) {
         this.dispatchEvent(new Event("beforeinit"))
+
         for(const e of form.querySelectorAll("select[data-options]")) {
             /**
              * @type {HTMLSelectElement}
@@ -131,131 +395,31 @@ class Frameworker {
              */
             const options = se.dataset.options
             this.#assertKey(options)
-            const document = se.ownerDocument
 
-            /**
-             * @type {HTMLOptionElement[]}
-             */
-            let addedOptions = []
-
-            const addOptions = () => {
-                const value = se.value
-                for(const oldOption of addedOptions) {
-                    se.removeChild(oldOption)
-                }
-                addedOptions = []
-                for(const [k, v] of this.#optionKeyValues(options)) {
-                    const option = document.createElement("option")
-                    option.value = k
-                    option.textContent = v.name
-                    addedOptions.push(option)
-                    se.append(option)
-                }
-                se.value = value
-            }
-            addOptions()
-            this.addEventListener(`update:${options}`, () => addOptions())
+            this.#x.selectOptions.push({he: se, options})
         }
-        for(const e of form.querySelectorAll("fieldset[data-options]")) {
-            /**
-             * @type {HTMLFieldSetElement}
-             */
-            const fe = e
-            /**
-             * @type {string}
-             */
-            const options = fe.dataset.options
-            this.#assertKey(options)
-            const document = fe.ownerDocument
-            const name = "" + Math.random()
 
+        for(const e of form.querySelectorAll("[data-options]:not(select)")) {
             /**
-             * @type {HTMLLabelElement[]}
-             */
-            let addedOptions = []
-            const addOptions = () => {
-                /**
-                 * @type {string | undefined}
-                 */
-                let oldValue
-                for(const oldOption of addedOptions) {
-                    /**
-                     * @type {HTMLInputElement | null}
-                     */
-                    const input = oldOption.querySelector("input")
-                    if(input?.checked) {
-                        oldValue = input.value
-                    }
-                    fe.removeChild(oldOption)
-                }
-                addedOptions = []
-                for(const [k, v] of this.#optionKeyValues(options)) {
-                    const input = document.createElement("input")
-                    input.type = "radio"
-                    input.name = name
-                    input.value = k
-                    input.textContent = v.name
-                    if(oldValue === k) {
-                        input.checked = true
-                    }
-                    const label = document.createElement("label")
-                    label.append(input)
-                    label.append(" " + v.name)
-                    addedOptions.push(label)
-                    fe.append(label)
-                }
-            }
-            addOptions()
-            this.addEventListener(`update:${options}`, () => addOptions())
-        }
-        for(const e of form.querySelectorAll("fieldset[data-readwrite]")) {
-            /**
-             * @type {HTMLFieldSetElement}
+             * @type {HTMLElement}
              */
             const he = e
             /**
              * @type {string}
              */
+            const options = he.dataset.options
+            this.#assertKey(options)
+
+            const ps = new PseudoSelect(he)
+            this.#x.selectOptions.push({he: ps, options: options})
             const key = he.dataset.readwrite
-            this.#assertKey(key)
-            /**
-             * @type {string}
-             */
-            const optionsKey = he.dataset.options
-            this.#assertKey(optionsKey)
-            for(const le of he.querySelectorAll("label")) {
-                /**
-                 * @type {HTMLLabelElement}
-                 */
-                const hle = le
-                const ie = hle.querySelector("input")
-                if(ie instanceof HTMLInputElement) {
-                    he.addEventListener("change", () => {
-                        if(ie.checked) {
-                            this.#retainedData[key] = this.#retainedData[optionsKey][ie.value]
-                            hle.classList.add("selected")
-                        } else {
-                            hle.classList.remove("selected")
-                        }
-                    })
-                    ie.checked = (this.#retainedData[key] == this.#retainedData[optionsKey][ie.value])
-                    if(ie.checked) {
-                        hle.classList.add("selected")
-                    } else {
-                        hle.classList.remove("selected")
-                    }
-                    this.addEventListener(`update:${key}`, () => {
-                        ie.checked = (this.#retainedData[key] == this.#retainedData[optionsKey][ie.value])
-                        if(ie.value) {
-                            hle.classList.add("selected")
-                        } else {
-                            hle.classList.remove("selected")
-                        }
-                    })
-                }
+            if(key) {
+                this.#assertKey(key)
+                this.#x.selectRw.push({he: ps, key, optionsKey: options})
             }
         }
-        for(const e of form.querySelectorAll("input[data-readwrite], select[data-readwrite]")) {
+
+        for(const e of form.querySelectorAll("input[data-readwrite]")) {
             /**
              * @type {HTMLInputElement}
              */
@@ -265,39 +429,27 @@ class Frameworker {
              */
             const key = he.dataset.readwrite
             this.#assertKey(key)
-            if(he.type == "checkbox") {
-                he.addEventListener("change", () => {
-                    this.#retainedData[key] = he.checked
-                })
-                he.checked = this.#retainedData[key]
-                this.addEventListener(`update:${key}`, () => he.checked = this.#retainedData[key])
-            } else if(he.dataset.options) {
-                // <select>
-                const optionsKey = he.dataset.options
-                // Options mode - rewrite.
-                he.addEventListener("change", () => {
-                    this.#retainedData[key] = this.#retainedData[optionsKey][he.value]
-                })
-                const updateValue = () => {
-                    for(const [k, v] of this.#optionKeyValues(optionsKey)) {
-                        if(v === this.#retainedData[key]) {
-                            he.value = k
-                            break
-                        }
-                    }
-                }
-                updateValue()
-
-                this.addEventListener(`update:${key}`, updateValue)
-            } else {
-                he.addEventListener("change", () => {
-                    this.#retainedData[key] = he.value
-                })
-                he.value = this.#retainedData[key]
-                this.addEventListener(`update:${key}`, () => he.value = this.#retainedData[key])
-            }
-            he.addEventListener("change", () => this.dispatchEvent(new Event(`update:${key}`)))
+            this.#x.inputRw.push({key, he})
         }
+
+        for(const e of form.querySelectorAll("select[data-readwrite]")) {
+            /**
+             * @type {HTMLSelectElement}
+             */
+            const he = e
+            /**
+             * @type {string}
+             */
+            const key = he.dataset.readwrite
+            this.#assertKey(key)
+
+            // Detect change
+            const optionsKey = he.dataset.options
+            this.#assertKey(optionsKey ?? key)
+
+            this.#x.selectRw.push({he, key, optionsKey})
+        }
+
         for(const e of form.querySelectorAll("[data-read]")) {
             /**
              * @type {HTMLElement}
@@ -308,10 +460,9 @@ class Frameworker {
              */
             const key = he.dataset.read
             this.#assertKey(key)
-            const triggerKey = he.dataset["read-trigger"] ?? key
-            this.#assertKey(triggerKey)
-            this.addEventListener(`update:${triggerKey}`, () => he.textContent = this.#retainedData[key])
-            he.textContent = this.#retainedData[key]
+            const triggerKey = he.dataset["read-trigger"]
+            this.#assertKey(triggerKey ?? key)
+            this.#x.read.push({he, key, triggerKey})
         }
 
         for(const e of form.querySelectorAll("[data-call]")) {
@@ -323,11 +474,119 @@ class Frameworker {
              * @type {string}
              */
             const key = he.dataset.call
+            this.#x.call.push({he, key})
+        }
+
+        this.#addSelectOptions()
+        this.#addSelectRw()
+        this.#addInputRw()
+        this.#addRead()
+        this.#addCall()
+
+        this.dispatchEvent(new Event("init"))
+    }
+
+    /**
+     *
+     */
+    #addCall() {
+        const pendingCallElements = this.#x.call
+        this.#x.call = []
+        for (const { he, key } of pendingCallElements) {
             he.addEventListener("click", () => {
                 this.#retainedData[key]()
             })
         }
-        this.dispatchEvent(new Event("init"))
+    }
+
+    /**
+     *
+     */
+    #addRead() {
+        const readElements = this.#x.read
+        this.#x.read = []
+        for (const { he, key, triggerKey } of readElements) {
+            this.addEventListener(`update:${triggerKey ?? key}`, () => he.textContent = this.#retainedData[key])
+            he.textContent = this.#retainedData[key]
+        }
+    }
+
+    /**
+     *
+     */
+    #addInputRw() {
+        const inputRwElements = this.#x.inputRw
+        this.#x.inputRw = []
+        for (const { he, key } of inputRwElements) {
+            // Detect change
+            he.addEventListener("change", (evt) => {
+                const te = evt.target
+                if (!(te instanceof HTMLInputElement)) {
+                    return
+                }
+                if (te.type == "checkbox") {
+                    this.#retainedData[key] = te.checked
+                } else {
+                    this.#retainedData[key] = te.value
+                }
+                console.log("Sending", `update:${key}`)
+                this.dispatchEvent(new Event(`update:${key}`))
+            })
+
+            if (he.type == "checkbox") {
+                he.checked = this.#retainedData[key]
+                this.addEventListener(`update:${key}`, () => he.checked = this.#retainedData[key])
+            } else {
+                he.value = this.#retainedData[key]
+                this.addEventListener(`update:${key}`, () => he.value = this.#retainedData[key])
+            }
+        }
+    }
+
+    /**
+     *
+     */
+    #addSelectRw() {
+        const selectRwElements = this.#x.selectRw
+        this.#x.selectRw = []
+        for (const { he, key, optionsKey } of selectRwElements) {
+            he.addEventListener("change", () => {
+                this.#retainedData[key] = optionsKey ? this.#retainedData[optionsKey][he.value] : he.value
+                console.log("Sending", `update:${key}`)
+                this.dispatchEvent(new Event(`update:${key}`))
+            })
+
+            if (optionsKey) {
+                const updateValue = () => {
+                    for (const [k, v] of this.#optionKeyValues(optionsKey)) {
+                        if (v === this.#retainedData[key]) {
+                            he.value = k
+                            break
+                        }
+                    }
+                }
+                updateValue()
+
+                this.addEventListener(`update:${key}`, updateValue)
+            } else {
+                he.value = this.#retainedData[key]
+                this.addEventListener(`update:${key}`, () => he.value = this.#retainedData[key])
+            }
+        }
+    }
+
+    /**
+     *
+     */
+    #addSelectOptions() {
+        const selectOptionElements = this.#x.selectOptions
+        this.#x.selectOptions = []
+        for (const { he: se, options } of selectOptionElements) {
+            const adder = se instanceof HTMLSelectElement ? new SelectOptionsAdder(se, this.#document) :
+                new PseudoSelectOptionsAdder(se, this.#document)
+            adder.addOptions(this.#optionKeyValues(options))
+            this.addEventListener(`update:${options}`, () => adder.addOptions(this.#optionKeyValues(options)))
+        }
     }
 
     /**
