@@ -5,10 +5,6 @@
  */
 
 /**
- * @typedef {{inputRw: {he: HTMLInputElement | HTMLSelectElement | PseudoSelect, key: string}[], read: {he: HTMLElement, key: string, triggerKey: string | undefined}[], call: {he: HTMLElement, key: string}[]}} ElementsToHandle
- */
-
-/**
  *
  */
 class PseudoSelectOption {
@@ -311,6 +307,40 @@ class Frameworker {
 
     /**
      *
+     * @param {HTMLElement} he
+     * @param {string} key
+     */
+    #connectInputRw(he, key) {
+        /**
+         * @type {() => *}
+         */
+        let read
+        /**
+         * @type {() => *}
+         */
+        let write
+        if(he instanceof HTMLInputElement && he.type == "checkbox") {
+            write = () => this.#storeHTMLValue(key, he.checked)
+            read = () => he.checked = this.#valueToHTML(key)
+        } else {
+            const hex = (he instanceof HTMLInputElement || he instanceof HTMLSelectElement) ? he : new PseudoSelect(he)
+            if(key in this.#htmlValueMapper && !(hex instanceof HTMLInputElement)) {
+                const adder = hex instanceof HTMLSelectElement ? new SelectOptionsAdder(hex, this.#document) :
+                    new PseudoSelectOptionsAdder(hex, this.#document)
+                adder.addOptions(Object.entries(this.#htmlValueMapper[key].options))
+                this.addEventListener(`update-options:${key}`, () => adder.addOptions(Object.entries(this.#htmlValueMapper[key].options)))
+            }
+            write = () => this.#storeHTMLValue(key, hex.value)
+            read = () => hex.value = this.#valueToHTML(key)
+        }
+
+        read()
+        this.addEventListener(`update:${key}`, read)
+        he.addEventListener("change", write)
+    }
+
+    /**
+     *
      * @param {string} key
      * @param {string | number | boolean} value
      */
@@ -411,24 +441,9 @@ class Frameworker {
     init(form) {
         this.dispatchEvent(new Event("beforeinit"))
 
-        /**
-         * @type {ElementsToHandle}
-         */
-        const elementsToHandle = {
-            inputRw: [],
-            read: [],
-            call: [],
-        }
-
         for(const {he, key} of this.#findAnyElements(form, "readwrite")) {
             this.#assertKey(key)
-
-            if(he instanceof HTMLInputElement || he instanceof HTMLSelectElement) {
-                elementsToHandle.inputRw.push({he, key})
-            } else {
-                const ps = new PseudoSelect(he)
-                elementsToHandle.inputRw.push({he: ps, key})
-            }
+            this.#connectInputRw(he, key)
         }
 
         for(const {he, key} of this.#findAnyElements(form, "read")) {
@@ -436,72 +451,18 @@ class Frameworker {
 
             const triggerKey = he.dataset["read-trigger"]
             this.#assertKey(triggerKey ?? key)
-            elementsToHandle.read.push({he, key, triggerKey})
+
+            this.addEventListener(`update:${triggerKey ?? key}`, () => he.textContent = this.#valueToHTML(key))
+            he.textContent = this.#valueToHTML(key)
         }
 
         for(const {he, key} of this.#findAnyElements(form, "call")) {
-            elementsToHandle.call.push({he, key})
-        }
-
-        this.#addInputRw(elementsToHandle)
-        this.#addRead(elementsToHandle)
-        this.#addCall(elementsToHandle)
-
-        this.dispatchEvent(new Event("init"))
-    }
-
-    /**
-     * @param {ElementsToHandle} elementsToHandle
-     */
-    #addCall(elementsToHandle) {
-        for (const { he, key } of elementsToHandle.call) {
             he.addEventListener("click", () => {
                 this.#retainedData[key]()
             })
         }
-    }
 
-    /**
-     * @param {ElementsToHandle} elementsToHandle
-     */
-    #addRead(elementsToHandle) {
-        for (const { he, key, triggerKey } of elementsToHandle.read) {
-            this.addEventListener(`update:${triggerKey ?? key}`, () => he.textContent = this.#valueToHTML(key))
-            he.textContent = this.#valueToHTML(key)
-        }
-    }
-
-    /**
-     * @param {ElementsToHandle} elementsToHandle
-     */
-    #addInputRw(elementsToHandle) {
-        for (const { he, key } of elementsToHandle.inputRw) {
-            /**
-             * @type {() => *}
-             */
-            let read
-            /**
-             * @type {() => *}
-             */
-            let write
-            if(he instanceof HTMLInputElement && he.type == "checkbox") {
-                write = () => this.#storeHTMLValue(key, he.checked)
-                read = () => he.checked = this.#valueToHTML(key)
-            } else {
-                if(key in this.#htmlValueMapper && !(he instanceof HTMLInputElement)) {
-                    const adder = he instanceof HTMLSelectElement ? new SelectOptionsAdder(he, this.#document) :
-                        new PseudoSelectOptionsAdder(he, this.#document)
-                    adder.addOptions(Object.entries(this.#htmlValueMapper[key].options))
-                    this.addEventListener(`update-options:${key}`, () => adder.addOptions(Object.entries(this.#htmlValueMapper[key].options)))
-                }
-                write = () => this.#storeHTMLValue(key, he.value)
-                read = () => he.value = this.#valueToHTML(key)
-            }
-
-            read()
-            this.addEventListener(`update:${key}`, read)
-            he.addEventListener("change", write)
-        }
+        this.dispatchEvent(new Event("init"))
     }
 
     /**
