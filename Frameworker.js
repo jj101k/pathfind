@@ -5,6 +5,10 @@
  */
 
 /**
+ * @typedef {{inputRw: {he: HTMLInputElement | HTMLSelectElement | PseudoSelect, key: string}[], read: {he: HTMLElement, key: string, triggerKey: string | undefined}[], call: {he: HTMLElement, key: string}[]}} ElementsToHandle
+ */
+
+/**
  *
  */
 class PseudoSelectOption {
@@ -297,24 +301,6 @@ class Frameworker {
 
     /**
      *
-     */
-    #x = {
-        /**
-         * @type {{he: HTMLInputElement | HTMLSelectElement | PseudoSelect, key: string}[]}
-         */
-        inputRw: [],
-        /**
-         * @type {{he: HTMLElement, key: string, triggerKey: string | undefined}[]}
-         */
-        read: [],
-        /**
-         * @type {{he: HTMLElement, key: string}[]}
-         */
-        call: [],
-    }
-
-    /**
-     *
      * @param {string} key
      */
     #assertKey(key) {
@@ -399,15 +385,6 @@ class Frameworker {
 
     /**
      *
-     * @param {string} key
-     * @returns
-     */
-    #optionKeyValues(key) {
-        return Object.entries(this.#retainedData[key])
-    }
-
-    /**
-     *
      * @param {HTMLElement} form
      * @param {string} dataKey
      * @param {string} [expr]
@@ -434,14 +411,23 @@ class Frameworker {
     init(form) {
         this.dispatchEvent(new Event("beforeinit"))
 
+        /**
+         * @type {ElementsToHandle}
+         */
+        const elementsToHandle = {
+            inputRw: [],
+            read: [],
+            call: [],
+        }
+
         for(const {he, key} of this.#findAnyElements(form, "readwrite")) {
             this.#assertKey(key)
 
             if(he instanceof HTMLInputElement || he instanceof HTMLSelectElement) {
-                this.#x.inputRw.push({he, key})
+                elementsToHandle.inputRw.push({he, key})
             } else {
                 const ps = new PseudoSelect(he)
-                this.#x.inputRw.push({he: ps, key})
+                elementsToHandle.inputRw.push({he: ps, key})
             }
         }
 
@@ -450,27 +436,25 @@ class Frameworker {
 
             const triggerKey = he.dataset["read-trigger"]
             this.#assertKey(triggerKey ?? key)
-            this.#x.read.push({he, key, triggerKey})
+            elementsToHandle.read.push({he, key, triggerKey})
         }
 
         for(const {he, key} of this.#findAnyElements(form, "call")) {
-            this.#x.call.push({he, key})
+            elementsToHandle.call.push({he, key})
         }
 
-        this.#addInputRw()
-        this.#addRead()
-        this.#addCall()
+        this.#addInputRw(elementsToHandle)
+        this.#addRead(elementsToHandle)
+        this.#addCall(elementsToHandle)
 
         this.dispatchEvent(new Event("init"))
     }
 
     /**
-     *
+     * @param {ElementsToHandle} elementsToHandle
      */
-    #addCall() {
-        const pendingCallElements = this.#x.call
-        this.#x.call = []
-        for (const { he, key } of pendingCallElements) {
+    #addCall(elementsToHandle) {
+        for (const { he, key } of elementsToHandle.call) {
             he.addEventListener("click", () => {
                 this.#retainedData[key]()
             })
@@ -478,24 +462,20 @@ class Frameworker {
     }
 
     /**
-     *
+     * @param {ElementsToHandle} elementsToHandle
      */
-    #addRead() {
-        const readElements = this.#x.read
-        this.#x.read = []
-        for (const { he, key, triggerKey } of readElements) {
+    #addRead(elementsToHandle) {
+        for (const { he, key, triggerKey } of elementsToHandle.read) {
             this.addEventListener(`update:${triggerKey ?? key}`, () => he.textContent = this.#valueToHTML(key))
             he.textContent = this.#valueToHTML(key)
         }
     }
 
     /**
-     *
+     * @param {ElementsToHandle} elementsToHandle
      */
-    #addInputRw() {
-        const inputRwElements = this.#x.inputRw
-        this.#x.inputRw = []
-        for (const { he, key } of inputRwElements) {
+    #addInputRw(elementsToHandle) {
+        for (const { he, key } of elementsToHandle.inputRw) {
             /**
              * @type {() => *}
              */
