@@ -314,7 +314,7 @@ class Frameworker {
          */
         read: [],
         /**
-         * @type {{he: HTMLButtonElement, key: string}[]}
+         * @type {{he: HTMLElement, key: string}[]}
          */
         call: [],
     }
@@ -371,37 +371,43 @@ class Frameworker {
 
     /**
      *
-     * @template T
-     * @param {any} e
-     * @param {T} t
-     * @returns {InstanceType<T>}
+     * @param {HTMLElement} form
+     * @param {string} dataKey
+     * @param {string} [expr]
+     * @returns {{he: HTMLElement, key: string}[]}
      */
-    #assertHtmlElement(e, t) {
+    #findAnyElements(form, dataKey, expr) {
+        const es = form.querySelectorAll(`${expr ?? ""}[data-${dataKey}]`)
         //@ts-ignore
-        if(e instanceof t) {
-            return e
-        } else {
-            throw new Error(`Internal type error: not HTML element`)
-        }
+        return [...es].map((e) => ({he: e, key: e.dataset[dataKey]}))
     }
 
     /**
      *
-     * @param {HTMLElement} e
-     * @param {string} key
+     * @param {HTMLElement} form
+     * @param {string} dataKey
+     * @returns {{he: HTMLInputElement, key: string}[]}
      */
-    #assertDatum(e, key) {
-        const v = e.dataset[key]
-        if(v === undefined) {
-            throw new Error(`Internal type error: not string`)
-        }
-        return v
+    #findInputElements(form, dataKey) {
+        //@ts-ignore
+        return this.#findAnyElements(form, dataKey, "input")
+    }
+
+    /**
+     *
+     * @param {HTMLElement} form
+     * @param {string} dataKey
+     * @returns {{he: HTMLSelectElement, key: string}[]}
+     */
+    #findSelectElements(form, dataKey) {
+        //@ts-ignore
+        return this.#findAnyElements(form, dataKey, "select")
     }
 
     /**
      * Connects to the form.
      *
-     * *[data-readwrite]: these get bidirectional data mapping
+     * (input|select)[data-readwrite]: these get bidirectional data mapping
      * *[data-read]: these get unidirectional data mapping (replacing
      * textContent). This may have data-read-trigger to announce what the actual
      * trigger for updating this value is.
@@ -414,17 +420,13 @@ class Frameworker {
     init(form) {
         this.dispatchEvent(new Event("beforeinit"))
 
-        for(const e of form.querySelectorAll("select[data-options]")) {
-            const se = this.#assertHtmlElement(e, HTMLSelectElement)
-            const options = this.#assertDatum(se, "options")
+        for(const {he: se, key: options} of this.#findSelectElements(form, "options")) {
             this.#assertKey(options)
 
             this.#x.selectOptions.push({he: se, options})
         }
 
-        for(const e of form.querySelectorAll("[data-options]:not(select)")) {
-            const he = this.#assertHtmlElement(e, HTMLElement)
-            const options = this.#assertDatum(he, "options")
+        for(const {he, key: options} of this.#findAnyElements(form, "options", ":not(select)")) {
             this.#assertKey(options)
 
             const ps = new PseudoSelect(he)
@@ -436,16 +438,12 @@ class Frameworker {
             }
         }
 
-        for(const e of form.querySelectorAll("input[data-readwrite]")) {
-            const he = this.#assertHtmlElement(e, HTMLInputElement)
-            const key = this.#assertDatum(he, "readwrite")
+        for(const {he, key} of this.#findInputElements(form, "readwrite")) {
             this.#assertKey(key)
             this.#x.inputRw.push({key, he})
         }
 
-        for(const e of form.querySelectorAll("select[data-readwrite]")) {
-            const he = this.#assertHtmlElement(e, HTMLSelectElement)
-            const key = this.#assertDatum(he, "readwrite")
+        for(const {he, key} of this.#findSelectElements(form, "readwrite")) {
             this.#assertKey(key)
 
             // Detect change
@@ -455,9 +453,7 @@ class Frameworker {
             this.#x.selectRw.push({he, key, optionsKey})
         }
 
-        for(const e of form.querySelectorAll("[data-read]")) {
-            const he = this.#assertHtmlElement(e, HTMLElement)
-            const key = this.#assertDatum(he, "read")
+        for(const {he, key} of this.#findAnyElements(form, "read")) {
             this.#assertKey(key)
 
             const triggerKey = he.dataset["read-trigger"]
@@ -465,9 +461,7 @@ class Frameworker {
             this.#x.read.push({he, key, triggerKey})
         }
 
-        for(const e of form.querySelectorAll("[data-call]")) {
-            const he = this.#assertHtmlElement(e, HTMLButtonElement)
-            const key = this.#assertDatum(he, "call")
+        for(const {he, key} of this.#findAnyElements(form, "call")) {
             this.#x.call.push({he, key})
         }
 
