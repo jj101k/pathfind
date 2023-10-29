@@ -56,7 +56,7 @@ class PseudoSelectOption {
      */
     constructor(document) {
         this.#element = document.createElement("div")
-        this.#element.dataset["pseudo-option"] = ""
+        this.#element.dataset.pseudoOption = ""
     }
 
     /**
