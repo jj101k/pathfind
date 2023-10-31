@@ -238,12 +238,12 @@ class AnySelectOptionsAdder {
         for (const oldOption of this.#addedOptions) {
             this.#select.removeChild(oldOption)
         }
-        this.addedOptions = []
+        this.#addedOptions = []
         for (const [k, v] of options) {
             const option = this.createOption()
             option.value = k
             option.textContent = v.name
-            this.addedOptions.push(option)
+            this.#addedOptions.push(option)
             this.#select.append(option)
         }
         this.#select.value = value
