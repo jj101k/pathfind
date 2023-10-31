@@ -351,6 +351,7 @@ class Frameworker {
         if(he instanceof HTMLInputElement && he.type == "checkbox") {
             write = () => this.#storeHTMLValue(key, he.checked)
             read = () => he.checked = this.#valueToHTML(key)
+            he.addEventListener("change", write)
         } else {
             const hex = (he instanceof HTMLInputElement || he instanceof HTMLSelectElement) ? he : new PseudoSelect(he)
             if(key in this.#htmlValueMapper && !(hex instanceof HTMLInputElement)) {
@@ -361,11 +362,11 @@ class Frameworker {
             }
             write = () => this.#storeHTMLValue(key, hex.value)
             read = () => hex.value = this.#valueToHTML(key)
+            hex.addEventListener("change", write)
         }
 
         read()
         this.addEventListener(`update:${key}`, read)
-        he.addEventListener("change", write)
     }
 
     /**
