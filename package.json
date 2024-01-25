@@ -1,0 +1,19 @@
+{
+  "name": "pathfind",
+  "version": "1.0.0",
+  "description": "Overheard: that Laser Squad (or was it UFO?) had to use precomputed paths between map areas because the cost was too high to compute it each time.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jj101k/pathfind.git"
+  },
+  "author": "Jim Driscoll <jim.a.driscoll@gmail.com>",
+  "license": "BSD-2-Clause",
+  "bugs": {
+    "url": "https://github.com/jj101k/pathfind/issues"
+  },
+  "homepage": "https://github.com/jj101k/pathfind#readme"
+}
