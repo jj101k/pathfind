@@ -1,7 +1,7 @@
 {
   "name": "pathfind",
   "version": "1.0.0",
-  "description": "Overheard: that Laser Squad (or was it UFO?) had to use precomputed paths between map areas because the cost was too high to compute it each time.",
+  "description": "A simple path-finding algorithm",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
