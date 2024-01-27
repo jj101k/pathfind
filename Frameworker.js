@@ -302,6 +302,8 @@ class OptionSet {
         throw new Error("Not implemented")
     }
     /**
+     * Returns the option key for the given value.
+     *
      * @param {V} value
      * @returns {string | undefined}
      */
