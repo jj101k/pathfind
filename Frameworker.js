@@ -102,6 +102,11 @@ class PseudoSelect {
     #eventListeners = {}
 
     /**
+     * @type {PseudoSelectOption[]}
+     */
+    #options = []
+
+    /**
      * @type {PseudoSelectOption | undefined}
      */
     #selectedStore
@@ -119,9 +124,17 @@ class PseudoSelect {
     }
 
     /**
-     *
+     * The DOM-like value
      */
-    value
+    get value() {
+        return this.#selected?.value ?? ""
+    }
+    set value(v) {
+        if(v != this.value) {
+            const s = this.#options.find(o => o.value == v)
+            this.#selected = s
+        }
+    }
 
     /**
      *
@@ -129,7 +142,6 @@ class PseudoSelect {
      */
     constructor(element) {
         this.#element = element
-        this.value = ""
     }
 
     /**
@@ -144,7 +156,6 @@ class PseudoSelect {
         }
         this.#selectedStore = v
         if(v) {
-            this.value = v.value
             v.selected = true
         }
         this.#changed()
@@ -165,6 +176,7 @@ class PseudoSelect {
      * @param {PseudoSelectOption} option
      */
     append(option) {
+        this.#options.push(option)
         option.addEventListener("click", () => this.#selected = option)
         option.appendTo(this.#element)
     }
@@ -186,9 +198,10 @@ class PseudoSelect {
      * @param {PseudoSelectOption} option
      */
     removeChild(option) {
+        this.#options = this.#options.filter(o => o !== option)
         option.removeFrom(this.#element)
         if(this.#selected === option) {
-            this.value = ""
+            this.#selected = undefined
         }
     }
 }
@@ -269,7 +282,143 @@ class PseudoSelectOptionsAdder extends AnySelectOptionsAdder {
 }
 
 /**
- *
+ * @abstract
+ * @template V
+ * @template {{name: string}} O
+ */
+class OptionSet {
+    /**
+     * @abstract
+     * @type {Record<string, O>}
+     */
+    get options() {
+        return {}
+    }
+    /**
+     * @param {V} value
+     * @returns {boolean | undefined}
+     */
+    booleanValue(value) {
+        throw new Error("Not implemented")
+    }
+    /**
+     * @param {V} value
+     * @returns {string | undefined}
+     */
+    optionMatching(value) {
+        throw new Error("Not implemented")
+    }
+
+    /**
+     * @abstract
+     * @param {string | boolean | number | undefined} htmlValue
+     * @returns {V | undefined}
+     */
+    valueFor(htmlValue) {
+        throw new Error("Not implemented")
+    }
+}
+
+/**
+ * @abstract
+ * @template {{name: string}} V
+ */
+class OptionSetLiteralAny extends OptionSet {
+    /**
+     * @type {Record<string, V>}
+     */
+    get options() {
+        throw new Error("Not implemented")
+    }
+
+    optionMatching(value) {
+        for(const [k, v] of Object.entries(this.options)) {
+            if(v === value) {
+                return k
+            }
+        }
+        return undefined
+    }
+    valueFor(htmlValue) {
+        return this.options[htmlValue]
+    }
+}
+
+/**
+ * @template {{name: string}} V
+ */
+class OptionSetLiteral extends OptionSetLiteralAny {
+    #options
+
+    get options() {
+        return this.#options
+    }
+    /**
+     *
+     * @param {Record<string, V>} options
+     */
+    constructor(options) {
+        super()
+        this.#options = options
+    }
+}
+
+/**
+ * @abstract
+ * @template V
+ */
+class OptionSetMappedAny extends OptionSet {
+    /**
+     * @type {Record<string, {name: string, value: V}> | {name: string, value: V}[]}
+     */
+    get options() {
+        throw new Error("Not implemented")
+    }
+    optionMatching(value) {
+        for(const [k, v] of Object.entries(this.options)) {
+            if(v.value === value) {
+                return k
+            }
+        }
+        return undefined
+    }
+    valueFor(htmlValue) {
+        return this.options[htmlValue].value
+    }
+}
+
+/**
+ * @template V
+ * @extends {OptionSetMappedAny<V>}
+ */
+class OptionSetMapped extends OptionSetMappedAny {
+    #options
+
+    get options() {
+        return this.#options
+    }
+    /**
+     *
+     * @param {Record<string, {name: string, value: V}> | {name: string, value: V}[]} options
+     */
+    constructor(options) {
+        super()
+        this.#options = options
+    }
+}
+
+/**
+ * @template V
+ * @typedef {Record<string, V & {name: string;}>} OptionSelection
+ */
+
+/**
+ * @template V
+ * @typedef {{options: OptionSelection<V>, optionType?: "map" | "raw";}} OptionSpec
+ */
+
+/**
+ * @template V
  */
 class Frameworker {
     /**
@@ -350,7 +499,12 @@ class Frameworker {
         let write
         if(he instanceof HTMLInputElement && he.type == "checkbox") {
             write = () => this.#storeHTMLValue(key, he.checked)
-            read = () => he.checked = this.#valueToHTML(key)
+            read = () => {
+                const b = this.#valueToBoolean(key)
+                if(b !== undefined) {
+                    he.checked = b
+                }
+            }
             he.addEventListener("change", write)
         } else {
             const hex = (he instanceof HTMLInputElement || he instanceof HTMLSelectElement) ? he : new PseudoSelect(he)
@@ -361,7 +515,12 @@ class Frameworker {
                 this.addEventListener(`update-options:${key}`, () => adder.addOptions(Object.entries(this.#htmlValueMapper[key].options)))
             }
             write = () => this.#storeHTMLValue(key, hex.value)
-            read = () => hex.value = this.#valueToHTML(key)
+            read = () => {
+                const v = this.#valueToHTML(key)
+                if(v !== undefined) {
+                    hex.value = v
+                }
+            },
             hex.addEventListener("change", write)
         }
 
@@ -385,13 +544,14 @@ class Frameworker {
     /**
      *
      * @param {string} key
-     * @param {string | number | boolean} value
+     * @param {string | number | boolean} htmlValue
+     * @returns {V | undefined}
      */
-    #htmlToValue(key, value) {
+    #htmlToValue(key, htmlValue) {
         if(this.#htmlValueMapper[key]) {
-            return this.#htmlValueMapper[key].options["" + value]
+            return this.#htmlValueMapper[key].valueFor(htmlValue)
         } else {
-            return value
+            return htmlValue
         }
     }
 
@@ -406,6 +566,22 @@ class Frameworker {
     }
 
     /**
+     * Returns an HTML-compatible boolean value for the given key.
+     *
+     * @param {string} key
+     * @returns
+     */
+    #valueToBoolean(key) {
+        const value = this.#retainedData[key]
+        if(this.#htmlValueMapper[key]) {
+            return this.#htmlValueMapper[key].booleanValue(value)
+        } else {
+            return !!value
+        }
+    }
+
+    /**
+     * Returns an HTML-compatible value string for the given key.
      *
      * @param {string} key
      * @returns
@@ -413,20 +589,16 @@ class Frameworker {
     #valueToHTML(key) {
         const value = this.#retainedData[key]
         if(this.#htmlValueMapper[key]) {
-            for(const [k, v] of Object.entries(this.#htmlValueMapper[key].options)) {
-                if(v === value) {
-                    return k
-                }
-            }
+            return this.#htmlValueMapper[key].optionMatching(value)
         } else {
-            return value
+            return "" + value
         }
     }
 
     /**
-     * @param {{[k: string]: any}} retainedData
+     * @param {{[k: string]: V}} retainedData
      * @param {Document} document
-     * @param {Record<string, {options: Record<string, {name: string}>}>} htmlValueMapper
+     * @param {Record<string, OptionSet<V>>} htmlValueMapper
      */
     constructor(retainedData, document, htmlValueMapper = {}) {
         this.#retainedData = retainedData
@@ -482,8 +654,8 @@ class Frameworker {
             const triggerKey = he.dataset["read-trigger"]
             this.#assertKey(triggerKey ?? key)
 
-            this.addEventListener(`update:${triggerKey ?? key}`, () => he.textContent = this.#valueToHTML(key))
-            he.textContent = this.#valueToHTML(key)
+            this.addEventListener(`update:${triggerKey ?? key}`, () => he.textContent = this.#valueToHTML(key) ?? null)
+            he.textContent = this.#valueToHTML(key) ?? null
         }
 
         for(const {he, key} of this.#findAnyElements(form, "call")) {
